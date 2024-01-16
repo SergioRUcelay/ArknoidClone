@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Content\DiseñosFondo\**" />
+    <Compile Remove="Content\Original_content\**" />
+    <EmbeddedResource Remove="Content\DiseñosFondo\**" />
+    <EmbeddedResource Remove="Content\Original_content\**" />
+    <None Remove="Content\DiseñosFondo\**" />
+    <None Remove="Content\Original_content\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="HandlerCollisions - copia.cs" />
+    <Compile Remove="HandlerCollisions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\bin\Windows\Content\" />
+    <Folder Include="Content\Animation\" />
+    <Folder Include="Content\Sounds\" />
+  </ItemGroup>
+  <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
+    <Message Text="Restoring dotnet tools" Importance="High" />
+    <Exec Command="dotnet tool restore" />
+  </Target>
+</Project>
