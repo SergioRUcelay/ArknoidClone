@@ -7,7 +7,7 @@ namespace Arkanoid_02
 {
     public class ArkaMain : Game
     {
-        private GraphicsDeviceManager graphics;
+        private readonly GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
         private bool Play;
@@ -35,7 +35,6 @@ namespace Arkanoid_02
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            
             spriteBatch = new SpriteBatch(GraphicsDevice);
             level = new Level(Services, spriteBatch);
             screen = new Screen(Services, spriteBatch);

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Arkanoid_02
 {
@@ -10,8 +11,7 @@ namespace Arkanoid_02
     public class Brick : SpriteArk 
     { 
         
-        public int hit {get; set;} 
-
+        public int Hit {get; set;}
         public readonly Hard hardness;
         public bool destructible;
 
@@ -19,7 +19,7 @@ namespace Arkanoid_02
         public SoundEffect MetalBounce;
         public SoundEffect DesdtroyBounce;
 
-        public Brick(Hard ColorHitValue, ContentManager content, string texture, Vector2 pos) : base(content, texture, pos)
+        public Brick(Hard ColorHitValue, ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
             hardness = ColorHitValue;
             
@@ -31,30 +31,29 @@ namespace Arkanoid_02
 
                 case Hard.Blue:
                     destructible = true;
-                    hit = 1;
+                    Hit = 1;
                     break;
 
                 case Hard.Green:
                     destructible = true;
-                    hit = 1;
+                    Hit = 1;
                     break;
 
                 case Hard.Yellow:
                     destructible = true;
-                    hit = 2;
+                    Hit = 2;
                     break;
 
                 case Hard.Pink:
                     destructible = true;
-                    hit = 3;
+                    Hit = 3;
                     break;
             }
             BrickBounce = content.Load<SoundEffect>("Sounds/HitBrickBounce");
             MetalBounce = content.Load<SoundEffect>("Sounds/MetalBounce");
             DesdtroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
-                                    
         }
-
+      
         public bool GetDestruc()
         {
             return destructible;

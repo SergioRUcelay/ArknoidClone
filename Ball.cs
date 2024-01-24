@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Content;
 using Game_Arka;
 using Microsoft.Xna.Framework.Audio;
 using System.Diagnostics;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Arkanoid_02
 {
@@ -40,7 +41,7 @@ namespace Arkanoid_02
         public bool Play {  get; set; }  // Flag to keep the ball attached to the player.
 
 
-        public Ball(ContentManager content, string texture, Vector2 pos) : base(content, texture, pos)
+        public Ball(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
 
             Debug.Assert(myTexture.Width == myTexture.Height,"height width should be the same");
@@ -85,7 +86,7 @@ namespace Arkanoid_02
         {
             var Pushkey = Keyboard.GetState();
 
-            if (canmove && Pushkey.IsKeyDown(Keys.Space)) Play = true;
+            if (can_move && Pushkey.IsKeyDown(Keys.Space)) Play = true;
             
         }
 
