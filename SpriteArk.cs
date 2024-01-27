@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace Game_Arka
 {
@@ -23,7 +22,7 @@ namespace Game_Arka
 
             public  Animations(ContentManager content, string text, int frameX, int frameY, double timeF, int row = 1)
             {
-                AnimaActive = true;
+                //AnimaActive = true;
                 aniTexture = content.Load<Texture2D>(text);
                 totalFrames = frameX;
                 frameTime = timeF;
@@ -36,7 +35,12 @@ namespace Game_Arka
                 }
             }
 
-            public void Start() => AnimaActive = true;
+            public void Start()
+            {
+                AnimaActive = true;
+                currentFrame = 0;
+                currenTime = 0;
+            }
 
             public void Stop() => AnimaActive = false;
 
@@ -49,6 +53,23 @@ namespace Game_Arka
             public void Update(GameTime gametime)
             {
                 if (!AnimaActive) return;
+                
+                currenTime += gametime.ElapsedGameTime.TotalSeconds;
+                if (currenTime >= frameTime)
+                {
+                    currenTime = 0;
+                    currentFrame = (currentFrame + 1) % totalFrames;
+                }
+
+               if (currentFrame >= totalFrames - 1)
+                {
+                 Stop();                
+                }
+            }
+
+            public void UpdateLoop(GameTime gametime)
+            {
+                if (!AnimaActive) return;
 
                 currenTime += gametime.ElapsedGameTime.TotalSeconds;
                 if (currenTime >= frameTime)
@@ -57,10 +78,19 @@ namespace Game_Arka
                     currentFrame = (currentFrame + 1) % totalFrames;
                 }
             }
+
             public void Draw(SpriteBatch sprite, Vector2 pos)
             {
-                var position=new Vector2(aniTexture.Width /2, aniTexture.Height/2);
-                sprite.Draw(aniTexture,pos, _frames[currentFrame], Color.White); //,0f,Vector2.Zero,new Vector2(1,1),SpriteEffects.None,2);
+                if (!AnimaActive) return;
+
+                sprite.Draw(aniTexture, pos, _frames[currentFrame], Color.White);
+            }
+
+            public void Draw(SpriteBatch sprite, Rectangle rect)
+            {
+                if (!AnimaActive) return;
+
+                sprite.Draw(aniTexture, rect, _frames[currentFrame], Color.White);
             }
         }
     
@@ -105,13 +135,23 @@ namespace Game_Arka
                     (int)position.Y, myTexture.Width, myTexture.Height);
             }
         }
+        public Rectangle R_blast
+        {
+            get
+            {
+                return new Rectangle((int)position.X-32,
+                    (int)position.Y-30, myTexture.Width +55, myTexture.Height+55);
+            }
+        }
 
         public Dictionary<int, Animations> ani_manager = new();
         public ContentManager content;
         public Vector2 velocity;
+        public int ani_key;
         public bool visible;
         public bool can_move;
-        public bool _animation;
+        public bool blas_animation;
+        public bool glin_animation;
         
         public SpriteArk(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos)
         {   
@@ -127,10 +167,11 @@ namespace Game_Arka
         {   
             ani_manager.Add(key, ani);
         }
-       
+
         public virtual void Draw(GameTime gameTime)
         {
-            _spritebatch.Draw(myTexture, position, Color.White);
+            if(visible)
+                _spritebatch.Draw(myTexture, position, Color.White);
         }
 
         public void SetVisible(bool v) { visible = v; }

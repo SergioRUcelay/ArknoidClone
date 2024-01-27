@@ -17,7 +17,7 @@ namespace Arkanoid_02
 
         public SoundEffect BrickBounce;
         public SoundEffect MetalBounce;
-        public SoundEffect DesdtroyBounce;
+        public SoundEffect DestroyBounce;
 
         public Brick(Hard ColorHitValue, ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
@@ -51,7 +51,7 @@ namespace Arkanoid_02
             }
             BrickBounce = content.Load<SoundEffect>("Sounds/HitBrickBounce");
             MetalBounce = content.Load<SoundEffect>("Sounds/MetalBounce");
-            DesdtroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
+            DestroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
         }
       
         public bool GetDestruc()
