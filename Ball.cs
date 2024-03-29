@@ -8,18 +8,18 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Arkanoid_02
 {
-    public static class Vector2Ex
-    {
-        // This is a extension of Vector2 class.
-        public static Vector2 Orthogonal(this Vector2 orth)
-        {
-            float copy = orth.Y;
-            orth.Y = orth.X;
-            orth.X = -1 * copy;
+    //public static class Vector2Ex
+    //{
+    //    // This is a extension of Vector2 class.
+    //    public static Vector2 Orthogonal(this Vector2 orth)
+    //    {
+    //        float copy = orth.Y;
+    //        orth.Y = orth.X;
+    //        orth.X = -1 * copy;
 
-            return orth;
-        }
-    }
+    //        return orth;
+    //    }
+    //}
 
     public class Ball : SpriteArk
     {
@@ -27,10 +27,10 @@ namespace Arkanoid_02
         public Vector2 startVelocity = new (100f, -520f);
         public Vector2 B_point, A_point, C_point, D_point, CD_point, AC_point;
 
-        private SoundEffect BallWallBounce;
-        private Circle circle;
+        private readonly SoundEffect _ballWallBounce;
+        private Circle _circle;
 
-        public float speed;
+        public float Speed;
         public float maxspeed;
         public float incrementspeed;
 
@@ -46,14 +46,14 @@ namespace Arkanoid_02
 
             Debug.Assert(myTexture.Width == myTexture.Height,"height width should be the same");
             var r = (myTexture.Height / 2);
-            circle=new Circle( pos + new Vector2(r), r);
+            _circle=new Circle( pos + new Vector2(r), r);
             velocity = startVelocity;
-            speed = 1f;
+            Speed = 1f;
             Ini = pos;
             elapsedTime = 20f;
             maxspeed = 3f;
             Play = false;
-            BallWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
+            _ballWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
            
             B_point = new Vector2(800, 100);
             A_point = new Vector2(25, 100);
@@ -75,7 +75,7 @@ namespace Arkanoid_02
             {
                 position.Y = p.Y - Size.Y + 3;
                 position.X = p.X + 60;
-                circle.Center = position + new Vector2(circle.Radius);
+                _circle.Center = position + new Vector2(_circle.Radius);
             }
 
             if (Play)
@@ -90,17 +90,21 @@ namespace Arkanoid_02
             
         }
 
+        /// <summary>
+        /// Which causes the ball to increase its speed over time.
+        /// </summary>
+        /// <param name="gameTime"></param>
         public void Animation(GameTime gameTime)
         {   
             timeCount += (float)gameTime.ElapsedGameTime.TotalSeconds;
           
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            position += base.velocity * speed * deltaTime;
-            circle.Center = position + new Vector2(circle.Radius);
+            position += base.velocity * Speed * deltaTime;
+            _circle.Center = position + new Vector2(_circle.Radius);
 
-            if (timeCount > elapsedTime && speed < maxspeed)
+            if (timeCount > elapsedTime && Speed < maxspeed)
             {
-                speed += 0.1f;
+                Speed += 0.1f;
                 elapsedTime += 20f;
             }
         }
@@ -108,8 +112,7 @@ namespace Arkanoid_02
         public void FrameBounce(Vector2 frame)
         {
             Vector2 normal, reflex, orthogonal;
-
-            
+                        
             orthogonal = frame.Orthogonal();
             normal = Vector2.Normalize(orthogonal);
             reflex = Vector2.Reflect(base.velocity, normal);
@@ -129,7 +132,7 @@ namespace Arkanoid_02
         {
             // TopWall
             if (position.Y <= A_point.Y)
-            { FrameBounce(CD_point); BallWallBounce.Play(); }
+            { FrameBounce(CD_point); _ballWallBounce.Play(); }
 
             // RightWall
             if (position.X > D_point.X)
@@ -157,7 +160,7 @@ namespace Arkanoid_02
             SetVisible(true);
             velocity = startVelocity;
             Play = false;
-            speed = 1f;
+            Speed = 1f;
         }
     }
 }

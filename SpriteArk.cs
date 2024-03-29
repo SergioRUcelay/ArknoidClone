@@ -106,6 +106,19 @@ namespace Game_Arka
             }
         }
 
+        public struct Line
+        {
+            public float a;
+            public float b;
+            public float c;
+        }
+
+        public struct Segment
+        {
+            public Vector2 ini;
+            public Vector2 end;
+        }
+
         public SpriteBatch _spritebatch;
         public readonly Texture2D myTexture;
         public Vector2 position;        
@@ -146,7 +159,7 @@ namespace Game_Arka
 
         public Dictionary<int, Animations> ani_manager = new();
         public ContentManager content;
-        public Vector2 velocity;
+        public Vector2 velocity; // The Vector Direction of the moviment.
         public int ani_key;
         public bool visible;
         public bool can_move;

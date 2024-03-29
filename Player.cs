@@ -12,32 +12,32 @@ namespace Arkanoid_02
 
     public class Player : SpriteArk
     {
-        private Vector2 movement;
+        private Vector2 _movement;
         public readonly Animations playerAnimation;
         public Vector2 Ini { get; set; }
 
-        private readonly SoundEffect Dead;
+        private readonly SoundEffect _dead;
         public SoundEffect Bounce;
         public SoundEffect ExtraLife;
 
-        private readonly Song Newlevel;
+        private readonly Song _newlevel;
 
         public int Life { get; set; }
         public bool Rightmove { get; set; }
         public bool Leftmove { get; set; }
         
-        private readonly float speed;
+        private readonly float _speed;
 
         public Player(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
-            movement = new Vector2(400f, 0);
+            _movement = new Vector2(400f, 0);
             Ini = pos;
             Life = 3;
-            speed = 1.5f;
-            Dead = content.Load<SoundEffect>("Sounds/PlayerDead");
+            _speed = 1.5f;
+            _dead = content.Load<SoundEffect>("Sounds/PlayerDead");
             Bounce = content.Load<SoundEffect>("Sounds/PlayerBounce");
             ExtraLife = content.Load<SoundEffect>("Sounds/ExtraLife");
-            Newlevel = content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
+            _newlevel = content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
             playerAnimation = new(content,"Animation/Animation_Player", 2, 1, 0.5f,1);
             
             blas_animation = true;
@@ -62,14 +62,14 @@ namespace Arkanoid_02
 
             if (can_move && KeyState.IsKeyDown(Keys.Left) && position.X > 35f)
             {
-                position.X -= movement.X * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                position.X -= _movement.X * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 Rightmove = false;
                 Leftmove = true;
             }
 
             if (can_move && KeyState.IsKeyDown(Keys.Right) && position.X + Size.X < 810f)
             {
-                position.X += movement.X * speed *(float)gameTime.ElapsedGameTime.TotalSeconds;
+                position.X += _movement.X * _speed *(float)gameTime.ElapsedGameTime.TotalSeconds;
                 Rightmove = true;
                 Leftmove = false;
             }
@@ -79,7 +79,7 @@ namespace Arkanoid_02
         {
             Life--;
             SetVisible(false);
-            Dead.Play();
+            _dead.Play();
             Level.Maintext = true;
             Level.NextLevel = false;
             Level.Time_lifeleft = 0;
@@ -90,7 +90,7 @@ namespace Arkanoid_02
         public void Start()
         {
             position = Ini;
-            MediaPlayer.Play(Newlevel);
+            MediaPlayer.Play(_newlevel);
             SetVisible(true);
            
         }

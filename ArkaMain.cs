@@ -7,37 +7,37 @@ namespace Arkanoid_02
 {
     public class ArkaMain : Game
     {
-        private readonly GraphicsDeviceManager graphics;
-        private SpriteBatch spriteBatch;
+        private readonly GraphicsDeviceManager _graphics;
+        private SpriteBatch _spriteBatch;
 
-        private bool Play;
-        private bool GameOver_screen;
+        private bool _play;
+        private bool _gameOver_screen;
                 
         public Level level;
         public Screen screen;
         
         public ArkaMain()
         {
-            graphics = new GraphicsDeviceManager(this);
+            _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = false;
 
             // Flag for selec WellcomeScreen or begin the game.
-            Play = false;
+            _play = false;
 
             // Flag for show Game Over Screem.
-            GameOver_screen = false;
+            _gameOver_screen = false;
 
-            graphics.PreferredBackBufferWidth = 843;
-            graphics.PreferredBackBufferHeight = 900;
+            _graphics.PreferredBackBufferWidth = 843;
+            _graphics.PreferredBackBufferHeight = 900;
         }
 
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-            level = new Level(Services, spriteBatch);
-            screen = new Screen(Services, spriteBatch);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
+            level = new Level(Services, _spriteBatch);
+            screen = new Screen(Services, _spriteBatch);
                        
             base.Initialize();
         }
@@ -53,27 +53,27 @@ namespace Arkanoid_02
                 Exit();
 
             if (Keyboard.GetState().IsKeyDown(Keys.P))
-               { Play = true; screen.playOn = true; }
+               { _play = true; screen.playOn = true; }
 
-            if (GameOver_screen)
+            if (_gameOver_screen)
             {
                 if (screen.ScreenBlackGameOver(gameTime))
                 {
-                    GameOver_screen = false;
-                    Play = false;
+                    _gameOver_screen = false;
+                    _play = false;
                 }
             }
 
-            if (!Play && !GameOver_screen)
+            if (!_play && !_gameOver_screen)
                 screen.WellcomeScreen(gameTime);
 
-            if (Play)
+            if (_play)
             {
                 if (!level.Update(gameTime))
                 {
                     level.GameOver();
-                    GameOver_screen = true;
-                    Play = false;
+                    _gameOver_screen = true;
+                    _play = false;
                 }
             }
 
@@ -85,12 +85,12 @@ namespace Arkanoid_02
         {
             //GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin();
+            _spriteBatch.Begin();
 
-            if (Play)
+            if (_play)
                 level.Draw(gameTime); //, spriteBatch);
                        
-            spriteBatch.End();
+            _spriteBatch.End();
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);

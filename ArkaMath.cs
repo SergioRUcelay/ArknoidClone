@@ -1,27 +1,46 @@
-﻿//using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
-using System.Numerics;
 
 namespace Arkanoid_02
 {
-    static class ArkaMath
+    public static class Vector2Ex
     {
-        public struct Line
+        // This is a extension of Vector2 class.
+        public static Vector2 Orthogonal(this Vector2 orth)
         {
-            public float a;
-            public float b;
-            public float c;
+            float copy = orth.Y;
+            orth.Y = orth.X;
+            orth.X = -1 * copy;
+
+            return orth;
         }
 
-        public static Line LineFromPoints(Vector2 p1, Vector2 p2)
+        static class ArkaMath
+    {
+        //public struct Line
+        //{
+        //    public float a;
+        //    public float b;
+        //    public float c;
+        //}
+
+        public struct Segment
+        {
+            public Vector2 ini;
+            public Vector2 end;
+        }
+
+            public static Line LineFromPoints(Vector2 p1, Vector2 p2)
         {
             //(y1 – y2)a + (x2 – x1)b + --c--(x1y2 – x2y1) = 0
             Line ret;
             ret.a = (p1.Y - p2.Y);
             ret.b = (p2.X - p1.X);
             ret.c = p1.X * p2.Y - p2.X * p1.Y;
+          //  c = (x1 - x2) * y1 + (y2 - y1) * x1
             return ret;
         }
+
         public static float DistancePointLine(Vector2 p, Line l)
         {
             return MathF.Abs((l.a * p.X) + (l.b * p.Y) + l.c) / MathF.Sqrt(l.a * l.a + l.b * l.b);
