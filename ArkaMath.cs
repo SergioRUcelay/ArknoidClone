@@ -14,15 +14,18 @@ namespace Arkanoid_02
 
             return orth;
         }
+    }
 
-        static class ArkaMath
+    static class ArkaMath
     {
-        //public struct Line
-        //{
-        //    public float a;
-        //    public float b;
-        //    public float c;
-        //}
+        public struct Line
+        {
+            public float a;
+            public float b;
+            public float c;
+        }
+
+
 
         public struct Segment
         {
@@ -30,14 +33,14 @@ namespace Arkanoid_02
             public Vector2 end;
         }
 
-            public static Line LineFromPoints(Vector2 p1, Vector2 p2)
+        public static Line LineFromPoints(Vector2 p1, Vector2 p2)
         {
             //(y1 – y2)a + (x2 – x1)b + --c--(x1y2 – x2y1) = 0
             Line ret;
             ret.a = (p1.Y - p2.Y);
             ret.b = (p2.X - p1.X);
             ret.c = p1.X * p2.Y - p2.X * p1.Y;
-          //  c = (x1 - x2) * y1 + (y2 - y1) * x1
+            //  c = (x1 - x2) * y1 + (y2 - y1) * x1
             return ret;
         }
 
@@ -80,5 +83,4 @@ namespace Arkanoid_02
 
         }
     }
-
 }

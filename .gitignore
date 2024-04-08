@@ -1,3 +1,12 @@
+# Directorios
 bin/
 obj/
+.config/
+.vs/
+
+#Archivos
 Arkanoid_Desings.svg
+Diagrama1.dia.autosave
+app.manifest
+Arkanoid_02.sln
+Diagrama1.dia
