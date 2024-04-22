@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
+using System.Collections.Generic;
 
 namespace Arkanoid_02
 {
@@ -18,69 +18,100 @@ namespace Arkanoid_02
 
     static class ArkaMath
     {
-        public struct Line
+        /// <summary> Scroll throught a list of segments for seek the one that collide whit the point. </summary>
+        /// <param name="segment"> List of segments </param>
+        /// <param name="direction"> Direction that follow the point(ball) on moviment </param>
+        /// <param name="speed"> The displacemet value of the point(ball) </param>
+        /// <param name="position"> The actual position of the point(ball) </param>
+        /// <param name="gameTime"> Holds the time state of a Game. (MonoGame -Microsoft.Xna.FrameWork-) </param>
+        public static void Collision(List<Segment> segment, Vector2 direction, float speed, Vector2 position, GameTime gameTime)
         {
-            public float a;
-            public float b;
-            public float c;
+            float minDistance = float.PositiveInfinity;
+
+            // Seeking the nearest segment.
+            foreach (Segment _segment in segment)
+            {
+                // Cheking active segment
+                if (_segment.ActiveSegment == false)
+                    continue;
+                // Evaluate if the normal and direction have the same value.
+                if (Vector2.Dot(direction, _segment.Normal) > 0)
+                    continue;
+
+                float newestDistance = DistancePointLineAlongDir(position, direction, _segment.end, _segment.ini);
+
+                if (newestDistance < speed * (float)gameTime.ElapsedGameTime.TotalSeconds)
+                {
+                    // This is the future position.
+                    Vector2 c = position + newestDistance * direction;
+
+                    // Evaluate if the point it`s in the segment.
+                    if (Ifbetween(_segment.ini, _segment.end, c))
+                    {
+                        if (newestDistance < minDistance)
+                        {
+                            minDistance = newestDistance;
+
+                            Level.Bounces(minDistance, _segment, direction, position );
+                            Level.SegmentAction(_segment);
+                        }
+                    }
+                }
+            }
         }
 
-
-
-        public struct Segment
+        /// <summary> Calculate the proyection the point on the line. </summary>
+        /// <param name="linePnt"> The starting point of the line </param>
+        /// <param name="lineDir"> The direction that follow the point </param>
+        /// <param name="point"> Proyected point on the line </param>
+        /// <returns></returns>
+        public static Vector2 NearestPointOnLine(Vector2 linePnt, Vector2 lineDir, Vector2 point)
         {
-            public Vector2 ini;
-            public Vector2 end;
-        }
-
-        public static Line LineFromPoints(Vector2 p1, Vector2 p2)
-        {
-            //(y1 – y2)a + (x2 – x1)b + --c--(x1y2 – x2y1) = 0
-            Line ret;
-            ret.a = (p1.Y - p2.Y);
-            ret.b = (p2.X - p1.X);
-            ret.c = p1.X * p2.Y - p2.X * p1.Y;
-            //  c = (x1 - x2) * y1 + (y2 - y1) * x1
-            return ret;
-        }
-
-        public static float DistancePointLine(Vector2 p, Line l)
-        {
-            return MathF.Abs((l.a * p.X) + (l.b * p.Y) + l.c) / MathF.Sqrt(l.a * l.a + l.b * l.b);
-        }
-
-        public static Vector2 NearestPointOnLine(Vector2 linePnt, Vector2 lineDir, Vector2 pnt)
-        {
-            lineDir /= lineDir.Length();//this needs to be a unit vector
-            var v = pnt - linePnt;
-            var d = Vector2.Dot(v, lineDir);
+            var v = point - linePnt;
+            var d = Vector2.Dot(v, lineDir); // This vector "d" have been send Normalized.
             return linePnt + lineDir * d;
         }
 
-        public static float DistancePointLineAlongDir(Vector2 p, Vector2 d, Line l)
+        /// <summary> Calculate the distance projection through the direction vector to the "line". </summary>
+        /// <param name="point">The position of the object</param>
+        /// <param name="direction">The direction through the object move</param>
+        /// <param name="vectorPoint1">The initial point the segment</param>
+        /// <param name="vectorPoint2">The end point of the segment</param>
+        /// <returns>The distance between point and the segment</returns>
+        public static float DistancePointLineAlongDir(Vector2 point, Vector2 direction, Vector2 vectorPoint1, Vector2 vectorPoint2)
         {
-            var vp1 = new Vector2(0, -l.c / l.b);            //optimization of y = (l.c - l.a.x)/l.b for x = 0
-            var vp2 = new Vector2(1, (-l.c - l.a) / l.b);    //optimization of y = (l.c - l.a.x)/l.b for x = 1
-            var v = vp2 - vp1;                          //line vector
-            var pil = NearestPointOnLine(vp1, v, p);    //vector from point to line
+            var dir = Vector2.Normalize(vectorPoint2 - vectorPoint1);                    //line vector
+            var pointOnLine = NearestPointOnLine(vectorPoint1, dir, point);   //vector from point to line
+            var alingment = Vector2.Dot((pointOnLine - point), direction);
 
             //Amo a ve... first catches whether the direction is towards of away from the line, the second catches wether we ARE in the line
-            if ((Vector2.Dot((pil - p), d) > 0) || (pil - p).Length() <= 0.000000001)
-                return DistancePointLine(p, l) / Vector2.Dot(d, v); //There is a finite distance from that point to the line along the vector
+            if (alingment > 0)// || (pointOnLine - point).Length() <= 0.000000001)
+                return (pointOnLine - point).Length() / Vector2.Dot(direction, Vector2.Normalize(pointOnLine - point)); //There is a finite distance from that point to the line along the vector
             else
-                return float.PositiveInfinity;                      //Nope, we are pointing the wrong way around
+                return float.PositiveInfinity;  //Nope, we are pointing the wrong way around
         }
 
-        static void Main()
+        /// <summary> This method claculate if the point is on the ini-end segment. </summary>
+        /// <param name="point">The position of the object</param>
+        /// <param name="initpoint">The initial point the segment</param>
+        /// <param name="endpoint">The end point of the segment</param>
+        /// <returns>true if witin</returns>
+        public static bool Ifbetween(Vector2 initpoint, Vector2 endpoint, Vector2 point)
         {
-            Vector2 a = new Vector2(0f, 0f);
-            Vector2 b = new Vector2(1f, 0f);
-            Vector2 c = new Vector2(1f, 1f);
+            //(X - a) / (d - b) or (y - b) / (c - a); The max direrence must be between 0 - 1.
+            float leftEpsilon, rightEpsilon;
 
-            Line AB = LineFromPoints(a, b);
-            //		Console.WriteLine(DistancePointLine(new Vector2(0f, 1f), AB));
-            Console.WriteLine(DistancePointLineAlongDir(new Vector2(100f, 0.00001f), new Vector2(0.7f, -0.7f), AB));
-
+            if ((endpoint.X - initpoint.X) != 0)
+            {
+                leftEpsilon = (point.X - initpoint.X) / (endpoint.X - initpoint.X);
+                if (0 <= leftEpsilon && leftEpsilon <= 1) return true;
+            }
+            if ((endpoint.Y - initpoint.Y) != 0)
+            {
+                rightEpsilon = (point.Y - initpoint.Y) / (endpoint.Y - initpoint.Y);
+                if (0 <= rightEpsilon && rightEpsilon <= 1) return true;
+            }
+            return false;
         }
     }
 }

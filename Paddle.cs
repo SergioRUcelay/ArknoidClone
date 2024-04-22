@@ -5,13 +5,15 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System;
 using System.Threading;
 
 namespace Arkanoid_02
 {
 
-    public class Player : SpriteArk
+    public class Paddle : SpriteArk
     {
+        public override Action OnHit { get; set; }
         private Vector2 _movement;
         public readonly Animations playerAnimation;
         public Vector2 Ini { get; set; }
@@ -28,7 +30,7 @@ namespace Arkanoid_02
         
         private readonly float _speed;
 
-        public Player(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
+        public Paddle(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
             _movement = new Vector2(400f, 0);
             Ini = pos;
@@ -60,16 +62,16 @@ namespace Arkanoid_02
         {
             var KeyState = Keyboard.GetState();
 
-            if (can_move && KeyState.IsKeyDown(Keys.Left) && position.X > 35f)
+            if (can_move && KeyState.IsKeyDown(Keys.Left) && Position.X > 35f)
             {
-                position.X -= _movement.X * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                Position.X -= _movement.X * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 Rightmove = false;
                 Leftmove = true;
             }
 
-            if (can_move && KeyState.IsKeyDown(Keys.Right) && position.X + Size.X < 810f)
+            if (can_move && KeyState.IsKeyDown(Keys.Right) && Position.X + Size.X < 810f)
             {
-                position.X += _movement.X * _speed *(float)gameTime.ElapsedGameTime.TotalSeconds;
+                Position.X += _movement.X * _speed *(float)gameTime.ElapsedGameTime.TotalSeconds;
                 Rightmove = true;
                 Leftmove = false;
             }
@@ -89,7 +91,7 @@ namespace Arkanoid_02
 
         public void Start()
         {
-            position = Ini;
+            Position = Ini;
             MediaPlayer.Play(_newlevel);
             SetVisible(true);
            

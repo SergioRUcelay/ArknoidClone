@@ -3,14 +3,16 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Arkanoid_02
 {
     public enum Hard { Metal, Blue, Green, Yellow, Pink };
 
     public class Brick : SpriteArk 
-    { 
-        
+    {
+        public override Action OnHit { get ; set; }
+
         public int Hit {get; set;}
         public readonly Hard hardness;
         public bool destructible;

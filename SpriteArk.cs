@@ -1,7 +1,7 @@
-﻿using Arkanoid_02;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Game_Arka
@@ -93,37 +93,13 @@ namespace Game_Arka
                 sprite.Draw(aniTexture, rect, _frames[currentFrame], Color.White);
             }
         }
-    
-        public struct Circle
-        {
-            public Vector2 Center;
-            public float Radius;
-
-            public Circle( Vector2 center, int r)
-            {
-               Center = center;
-               Radius = r;
-            }
-        }
-
-        public struct Line
-        {
-            public float a;
-            public float b;
-            public float c;
-        }
-
-        public struct Segment
-        {
-            public Vector2 ini;
-            public Vector2 end;
-        }
 
         public SpriteBatch _spritebatch;
         public readonly Texture2D myTexture;
-        public Vector2 position;        
+        public Vector2 Position;        
         public Vector2 ani_position;
-                
+        public abstract Action OnHit { get; set; }
+
         public Vector2 Size
         {
             get
@@ -144,22 +120,22 @@ namespace Game_Arka
         {
             get
             {
-                return new Rectangle((int)position.X,
-                    (int)position.Y, myTexture.Width, myTexture.Height);
+                return new Rectangle((int)Position.X,
+                    (int)Position.Y, myTexture.Width, myTexture.Height);
             }
         }
         public Rectangle R_blast
         {
             get
             {
-                return new Rectangle((int)position.X-32,
-                    (int)position.Y-30, myTexture.Width +55, myTexture.Height+55);
+                return new Rectangle((int)Position.X-32,
+                    (int)Position.Y-30, myTexture.Width +55, myTexture.Height+55);
             }
         }
 
         public Dictionary<int, Animations> ani_manager = new();
         public ContentManager content;
-        public Vector2 velocity; // The Vector Direction of the moviment.
+        public Vector2 Direction; // The Vector Direction of the moviment.
         public int ani_key;
         public bool visible;
         public bool can_move;
@@ -171,7 +147,7 @@ namespace Game_Arka
             this.content = content;
             _spritebatch = spriteBatch;
             myTexture = content.Load<Texture2D>(texture);
-            position = pos;
+            Position = pos;
             visible = true;
             can_move = false;
         }
@@ -184,7 +160,7 @@ namespace Game_Arka
         public virtual void Draw(GameTime gameTime)
         {
             if(visible)
-                _spritebatch.Draw(myTexture, position, Color.White);
+                _spritebatch.Draw(myTexture, Position, Color.White);
         }
 
         public void SetVisible(bool v) { visible = v; }

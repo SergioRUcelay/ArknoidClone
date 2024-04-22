@@ -15,7 +15,7 @@ namespace Arkanoid_02
         public ContentManager content;             
 
         private Ball _ball;
-        private Player _player;
+        private Paddle _player;
         private Brick _brick;
         public  Animations blast;
         public  Animations glint;
@@ -34,6 +34,7 @@ namespace Arkanoid_02
         private Vector2 _ballPosition;
 
         private readonly List<Brick> _brickList = new List<Brick>();
+        private readonly List<Segment> _segments= new List<Segment>();
         private readonly string[][] _currentLevel = new string [30][];
 
         private int _levelNumber;
@@ -61,7 +62,7 @@ namespace Arkanoid_02
             _backGroundPosition = new Vector2(0, 0);
             _playerPosition = new Vector2(365, 810);
             _ballPosition = new Vector2(380, 840);
-            _levelNumber = 2;            
+            _levelNumber = 1;            
             NumberBricks = 0;
             ExtraLifePoints = 6000;
             Points = 0;
@@ -86,7 +87,7 @@ namespace Arkanoid_02
             _numberPointFont = content.Load<SpriteFont>("Fonts/Points");
             _lifeLeft = content.Load<SpriteFont>("Fonts/Points");
 
-            _player = new Player(content, SpriteBatch,"Items/Player", _playerPosition);
+            _player = new Paddle(content, SpriteBatch,"Items/Player", _playerPosition);
             _player.AnimationAdd(1, _player.playerAnimation);
             _player.ani_manager[1].Start();
             _ball = new Ball(content, SpriteBatch, "Items/ball", _ballPosition);
@@ -109,7 +110,7 @@ namespace Arkanoid_02
             Time_lifeleft += gametime.ElapsedGameTime.TotalSeconds;
 
             _player.Update(gametime);
-            _ball.Update(gametime, ref _player.position);
+            _ball.Update(gametime, ref _player.Position);
 
             if (Points >= MaxPoints) MaxPoints = Points;
 
@@ -264,29 +265,29 @@ namespace Arkanoid_02
         {
             if (_player.visible == false) return false;
 
-            if (_player.position.X + _player.Size.X > _ball.position.X && (_ball.position.X + _ball.Size.X) > _player.position.X &&
-                    (_player.position.Y + _player.Size.Y) > _ball.position.Y && (_ball.position.Y + _ball.Size.Y) > _player.position.Y)
+            if (_player.Position.X + _player.Size.X > _ball.Position.X && (_ball.Position.X + _ball.Size.X) > _player.Position.X &&
+                    (_player.Position.Y + _player.Size.Y) > _ball.Position.Y && (_ball.Position.Y + _ball.Size.Y) > _player.Position.Y)
             {
                 // Right
-                if (_ball.position.X > _player.position.X && _ball.position.X + _ball.Size.X > _player.position.X + _player.Size.X && _ball.velocity.X < 0)
+                if (_ball.Position.X > _player.Position.X && _ball.Position.X + _ball.Size.X > _player.Position.X + _player.Size.X && _ball.Direction.X < 0)
                 {
                     _ball.Bounce(new Vector2(1, 0));
                 }
 
                 // Left
-                if (_ball.position.X < _player.position.X && _ball.position.X + _ball.Size.X < _player.position.X + _player.Size.X && _ball.velocity.X > 0)
+                if (_ball.Position.X < _player.Position.X && _ball.Position.X + _ball.Size.X < _player.Position.X + _player.Size.X && _ball.Direction.X > 0)
                 {
                     _ball.Bounce(new Vector2(1, 0));
                 }
 
                 // Top
-                if (_ball.position.Y < _player.position.Y && _ball.position.Y + _ball.Size.Y < _player.position.Y + _player.Size.Y && _ball.velocity.Y > 0)
+                if (_ball.Position.Y < _player.Position.Y && _ball.Position.Y + _ball.Size.Y < _player.Position.Y + _player.Size.Y && _ball.Direction.Y > 0)
                 {
                     _ball.Bounce(new Vector2(0, 1));
                 }
 
                 // Botton
-                if (_ball.position.Y > _player.position.Y && _ball.position.Y + _ball.Size.Y > _player.position.Y + _player.Size.Y && _ball.position.X < _player.position.X + _player.Size.X && _ball.velocity.Y < 0)
+                if (_ball.Position.Y > _player.Position.Y && _ball.Position.Y + _ball.Size.Y > _player.Position.Y + _player.Size.Y && _ball.Position.X < _player.Position.X + _player.Size.X && _ball.Direction.Y < 0)
                 {
                     _ball.Bounce(new Vector2(0, 1));
                 }
@@ -305,28 +306,28 @@ namespace Arkanoid_02
                     {
                      
                         // Right
-                        if (_ball.position.X > brick.position.X && _ball.position.X + _ball.Size.X > brick.position.X + brick.Size.X && _ball.velocity.X < 0 && on)
+                        if (_ball.Position.X > brick.Position.X && _ball.Position.X + _ball.Size.X > brick.Position.X + brick.Size.X && _ball.Direction.X < 0 && on)
                         {
                             _ball.Bounce(new Vector2(1, 0));
                             on = false;
                         }
 
                         // Left
-                        if (_ball.position.X < brick.position.X && _ball.position.X + _ball.Size.X < brick.position.X + brick.Size.X && _ball.velocity.X > 0 && on)
+                        if (_ball.Position.X < brick.Position.X && _ball.Position.X + _ball.Size.X < brick.Position.X + brick.Size.X && _ball.Direction.X > 0 && on)
                         {
                             _ball.Bounce(new Vector2(1, 0));
                             on = false;
                         }
 
                         // Top
-                        if (_ball.position.Y < brick.position.Y && _ball.position.Y + _ball.Size.Y < brick.position.Y + brick.Size.Y && _ball.velocity.Y > 0 && on)
+                        if (_ball.Position.Y < brick.Position.Y && _ball.Position.Y + _ball.Size.Y < brick.Position.Y + brick.Size.Y && _ball.Direction.Y > 0 && on)
                         {
                             _ball.Bounce(new Vector2(0, 1));
                             on = false;
                         }
 
                         // Botton
-                        if (_ball.position.Y > brick.position.Y && _ball.position.Y + _ball.Size.Y > brick.position.Y + brick.Size.Y && _ball.position.X < brick.position.X + brick.Size.X && _ball.velocity.Y < 0 && on)
+                        if (_ball.Position.Y > brick.Position.Y && _ball.Position.Y + _ball.Size.Y > brick.Position.Y + brick.Size.Y && _ball.Position.X < brick.Position.X + brick.Size.X && _ball.Direction.Y < 0 && on)
                         {
                             _ball.Bounce(new Vector2(0, -1));
                            
@@ -591,12 +592,41 @@ namespace Arkanoid_02
             {
                 
                 _player.ani_manager[1].UpdateLoop(gameTime);
-                _player.ani_manager[1].Draw(SpriteBatch, _player.position);             
+                _player.ani_manager[1].Draw(SpriteBatch, _player.Position);             
                 _ball.Draw(gameTime);
                 _ball.can_move = true;
                 _player.can_move = true;
             }
 
+        }
+        public static void Mensage()
+
+        {
+            Console.WriteLine("Ouch!!!! ma dao, ma dao");
+        }
+        public void DestroyBrick(Brick brick)
+        {
+
+            foreach (var segment in _segments)
+                segment.ActiveSegment &= segment.owner != brick; // No entiendo ESTO
+            brick.visible = false;
+
+        }
+
+        //public void PointAnimation(GameTime gameTime)
+        //{
+        //    _ball.Position += _ball.Speed * (float)gameTime.ElapsedGameTime.TotalSeconds * _ball.Direction;
+        //}
+
+        public static void Bounces(float minDistance, Segment segment, Vector2 direction, Vector2 position)
+        {
+            _ = minDistance * direction;
+            _ = Vector2.Reflect(direction, segment.Normal);
+        }
+
+        public static void SegmentAction(Segment segment)
+        {
+            segment.owner.OnHit();
         }
 
         public void Dispose() => content.Unload();

@@ -3,11 +3,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Arkanoid_02
 {
     public class Enemy : SpriteArk
     {
+        public override Action OnHit { get; set; }
         private Vector2 _position;
         private Vector2 _velocity;
 
