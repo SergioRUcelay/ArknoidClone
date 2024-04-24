@@ -84,7 +84,7 @@ namespace Arkanoid_02
             _dead.Play();
             Level.Maintext = true;
             Level.NextLevel = false;
-            Level.Time_lifeleft = 0;
+           // Level.Time_lifeleft = 0;
             Thread.Sleep(1500);
            
         }

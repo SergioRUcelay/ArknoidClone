@@ -18,15 +18,16 @@ namespace Arkanoid_02
 
     static class ArkaMath
     {
-        /// <summary> Scroll throught a list of segments for seek the one that collide whit the point. </summary>
+        /// <summary> Scroll throught a list of segments to find the closest collision. </summary>
         /// <param name="segment"> List of segments </param>
-        /// <param name="direction"> Direction that follow the point(ball) on moviment </param>
-        /// <param name="speed"> The displacemet value of the point(ball) </param>
-        /// <param name="position"> The actual position of the point(ball) </param>
+        /// <param name="direction"> Direction that follow the point on moviment </param>
+        /// <param name="position"> The position of the point</param>
         /// <param name="gameTime"> Holds the time state of a Game. (MonoGame -Microsoft.Xna.FrameWork-) </param>
-        public static void Collision(List<Segment> segment, Vector2 direction, float speed, Vector2 position, GameTime gameTime)
+        /// <returns> Segment, distance tuple </returns>
+        public static (float, Segment) Collision(List<Segment> segment, Vector2 direction, Vector2 position)
         {
             float minDistance = float.PositiveInfinity;
+            Segment collider = null;
 
             // Seeking the nearest segment.
             foreach (Segment _segment in segment)
@@ -40,24 +41,20 @@ namespace Arkanoid_02
 
                 float newestDistance = DistancePointLineAlongDir(position, direction, _segment.end, _segment.ini);
 
-                if (newestDistance < speed * (float)gameTime.ElapsedGameTime.TotalSeconds)
+                // This is the future position.
+                Vector2 c = position + newestDistance * direction;
+
+                // Evaluate if the point it`s in the segment.
+                if (Ifbetween(_segment.ini, _segment.end, c))
                 {
-                    // This is the future position.
-                    Vector2 c = position + newestDistance * direction;
-
-                    // Evaluate if the point it`s in the segment.
-                    if (Ifbetween(_segment.ini, _segment.end, c))
+                    if (newestDistance < minDistance)
                     {
-                        if (newestDistance < minDistance)
-                        {
-                            minDistance = newestDistance;
-
-                            Level.Bounces(minDistance, _segment, direction, position );
-                            Level.SegmentAction(_segment);
-                        }
+                        collider = _segment;
+                        minDistance = newestDistance;
                     }
                 }
             }
+            return (minDistance, collider);
         }
 
         /// <summary> Calculate the proyection the point on the line. </summary>
@@ -115,3 +112,5 @@ namespace Arkanoid_02
         }
     }
 }
+    
+

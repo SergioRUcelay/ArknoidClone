@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Arkanoid_02;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -97,7 +98,7 @@ namespace Game_Arka
         public SpriteBatch _spritebatch;
         public readonly Texture2D myTexture;
         public Vector2 Position;        
-        public Vector2 ani_position;
+        public Vector2 anima_position;
         public abstract Action OnHit { get; set; }
 
         public Vector2 Size
@@ -165,5 +166,17 @@ namespace Game_Arka
 
         public void SetVisible(bool v) { visible = v; }
 
+        public Segment[] GetSegments()
+        {
+            return new Segment[]
+            {
+                    new() {end = Position+new Vector2 (Size.X,0),     ini = Position+new Vector2(Size.X,Size.Y), owner = this, ActiveSegment = true},
+                    new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true},
+                    new() {end = Position+new Vector2(0,Size.Y),      ini = Position,                            owner = this, ActiveSegment = true},
+                    new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true},
+            };
+        }
+
     }
+
 }

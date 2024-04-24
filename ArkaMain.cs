@@ -59,10 +59,7 @@ namespace Arkanoid_02
             if (_gameOver_screen)
             {
                 if (screen.ScreenBlackGameOver(gameTime))
-                {
-                    _gameOver_screen = false;
-                    _play = false;
-                }
+                {_gameOver_screen = false; _play = false;}
             }
 
             if (!_play && !_gameOver_screen)

@@ -51,8 +51,8 @@ namespace Arkanoid_02
                     Hit = 3;
                     break;
             }
-            BrickBounce = content.Load<SoundEffect>("Sounds/HitBrickBounce");
-            MetalBounce = content.Load<SoundEffect>("Sounds/MetalBounce");
+            BrickBounce   = content.Load<SoundEffect>("Sounds/HitBrickBounce");
+            MetalBounce   = content.Load<SoundEffect>("Sounds/MetalBounce");
             DestroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
         }
       
