@@ -1,5 +1,4 @@
-﻿using Game_Arka;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Arkanoid_02
 {

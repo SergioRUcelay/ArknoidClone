@@ -1,11 +1,10 @@
-﻿using Arkanoid_02;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 
-namespace Game_Arka
+namespace Arkanoid_02
 {
     public abstract class SpriteArk
     {
@@ -99,6 +98,7 @@ namespace Game_Arka
         public readonly Texture2D myTexture;
         public Vector2 Position;        
         public Vector2 anima_position;
+
         public abstract Action OnHit { get; set; }
 
         public Vector2 Size
@@ -134,9 +134,9 @@ namespace Game_Arka
             }
         }
 
-        public Dictionary<int, Animations> ani_manager = new();
+        public Dictionary<int, Animations> AnimationManager = new();
         public ContentManager content;
-        public Vector2 Direction; // The Vector Direction of the moviment.
+        
         public int ani_key;
         public bool visible;
         public bool can_move;
@@ -155,7 +155,7 @@ namespace Game_Arka
 
         public void AnimationAdd(int key, Animations ani)
         {   
-            ani_manager.Add(key, ani);
+            AnimationManager.Add(key, ani);
         }
 
         public virtual void Draw(GameTime gameTime)
@@ -166,17 +166,9 @@ namespace Game_Arka
 
         public void SetVisible(bool v) { visible = v; }
 
-        public Segment[] GetSegments()
-        {
-            return new Segment[]
-            {
-                    new() {end = Position+new Vector2 (Size.X,0),     ini = Position+new Vector2(Size.X,Size.Y), owner = this, ActiveSegment = true},
-                    new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true},
-                    new() {end = Position+new Vector2(0,Size.Y),      ini = Position,                            owner = this, ActiveSegment = true},
-                    new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true},
-            };
-        }
+
 
     }
+    
 
 }

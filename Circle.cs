@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Arkanoid_02
 {
-    public struct Circle
+    public class Circle
     {
         public Vector2 Center;
         public readonly float Radius;
@@ -15,7 +15,7 @@ namespace Arkanoid_02
             Debug.Assert(Radius > 0, "The value can´t be negative");
         }
 
-        public readonly float GetSize()
+        public float GetSize()
         {
             return Radius; 
         }

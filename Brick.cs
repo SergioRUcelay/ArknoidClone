@@ -1,5 +1,4 @@
-﻿using Game_Arka;
-using Microsoft.Xna.Framework.Content;
+﻿using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,7 +10,7 @@ namespace Arkanoid_02
 
     public class Brick : SpriteArk 
     {
-        public override Action OnHit { get ; set; }
+        public override Action OnHit { get; set; }
 
         public int Hit {get; set;}
         public readonly Hard hardness;
@@ -54,6 +53,7 @@ namespace Arkanoid_02
             BrickBounce   = content.Load<SoundEffect>("Sounds/HitBrickBounce");
             MetalBounce   = content.Load<SoundEffect>("Sounds/MetalBounce");
             DestroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
+            
         }
       
         public bool GetDestruc()
@@ -68,7 +68,16 @@ namespace Arkanoid_02
             else
                 destructible = false;
         }
-        
 
+        public Segment[] GetSegments()
+        {
+            return new Segment[]
+            {
+                    new() {end = Position+new Vector2 (Size.X,0),     ini = Position+new Vector2(Size.X,Size.Y), owner = this, ActiveSegment = true}, // Right
+                    new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true}, // down
+                    new() {end = Position+new Vector2(0,Size.Y),      ini = Position,                            owner = this, ActiveSegment = true}, // Left
+                    new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true}, // up
+            };
+        }
     }
 }

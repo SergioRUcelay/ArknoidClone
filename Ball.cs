@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
-using Game_Arka;
 using Microsoft.Xna.Framework.Audio;
 using System.Diagnostics;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,11 +12,12 @@ namespace Arkanoid_02
     {
         public override Action OnHit { get; set; }
         public Vector2 Ini { get; set; } // This is the initial position.
-        public Vector2 StarDirection = new (100f, -520f);
+        private Vector2 StarDirection = new (100f, -520f);
+        public Vector2 Direction; // The Vector Direction of the moviment.
         public Vector2 B_point, A_point, C_point, D_point, CD_point, AC_point;
         
         private readonly SoundEffect _ballWallBounce;
-        private Circle _circle;
+        public Circle _circle;
 
         public float Speed;        
         public float Maxspeed;
@@ -27,7 +27,7 @@ namespace Arkanoid_02
         public float TimeCount;
         public float ElapsedTime;
 
-        public bool Play {  get; set; }  // Flag to keep the ball attached to the player.
+        public bool Play {  get; set; }  // Flag to keep the ball attached to the paddle.
 
 
         public Ball(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
@@ -35,12 +35,13 @@ namespace Arkanoid_02
 
             Debug.Assert(myTexture.Width == myTexture.Height,"height width should be the same");
             var r = (myTexture.Height / 2);
-            _circle=new Circle( pos + new Vector2(r), r);
-            base.Direction = StarDirection;
-            Speed = 1f;
+            _circle = new Circle( pos + new Vector2(r), r);
+            StarDirection.Normalize();
+            Direction = StarDirection;
+            Speed = 600f;
             Ini = pos;
             ElapsedTime = 20f;
-            Maxspeed = 3f;
+            Maxspeed = 600f;
             Play = false;
             _ballWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
            
@@ -52,43 +53,16 @@ namespace Arkanoid_02
             AC_point = A_point - C_point;
         }
         
-        public void Update(GameTime gameTime, ref Vector2 p)
-        {
-           
-            if (!visible)
-                Start();
-
-            KeyBoard(); // To beging the ball moviment.
-           
-            if (!Play)
-            {
-                Position.Y = p.Y - Size.Y + 3;
-                Position.X = p.X + 60;
-                _circle.Center = Position + new Vector2(_circle.Radius);
-            }
-
-            if (Play)
-                Animation(gameTime);
-        }
-
-        public void KeyBoard()
-        {
-            var Pushkey = Keyboard.GetState();
-
-            if (can_move && Pushkey.IsKeyDown(Keys.Space)) Play = true;
-            
-        }
-
         /// <summary>
-        /// Which causes the ball to increase its speed over time.
+        /// Animate the ball and the increasing his speed over time.
         /// </summary>
         /// <param name="gameTime"></param>
-        public void Animation(GameTime gameTime)
+        public void IncreaseBallSpeedOverTime(GameTime gameTime)
         {   
             TimeCount += (float)gameTime.ElapsedGameTime.TotalSeconds;
           
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            Position += base.Direction * Speed * deltaTime;
+            Position += Direction * Speed * deltaTime;
             _circle.Center = Position + new Vector2(_circle.Radius);
 
             if (TimeCount > ElapsedTime && Speed < Maxspeed)
@@ -104,8 +78,8 @@ namespace Arkanoid_02
                         
             orthogonal = frame.Orthogonal();
             normal = Vector2.Normalize(orthogonal);
-            reflex = Vector2.Reflect(base.Direction, normal);
-            base.Direction = reflex;
+            reflex = Vector2.Reflect(Direction, normal);
+            Direction = reflex;
         }
 
         public void Bounce(Vector2 normal)
@@ -113,8 +87,8 @@ namespace Arkanoid_02
             Vector2 reflex, plus;
 
             plus = new Vector2(2f, 0f);
-            reflex = Vector2.Reflect(base.Direction, normal);
-            base.Direction = reflex + plus;
+            reflex = Vector2.Reflect(Direction, normal);
+            Direction = reflex + plus;
         }
 
         public bool WallBounce()
@@ -145,11 +119,14 @@ namespace Arkanoid_02
 
         public void Start()
         {
-            Position = Ini;
-            SetVisible(true);
-            base.Direction = StarDirection;
-            Play = false;
-            Speed = 1f;
+            if (!visible)
+            {
+                Position = Ini;
+                SetVisible(true);
+                Direction = StarDirection;
+                Play = false;
+                //Speed = 1f;
+            }
         }
     }
 }

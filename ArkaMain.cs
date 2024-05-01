@@ -1,5 +1,4 @@
-﻿using Game_Arka;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -8,10 +7,12 @@ namespace Arkanoid_02
 {
     public class ArkaMain : Game
     {
-        private readonly GraphicsDeviceManager _graphics;
+        public readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
+        // Flag for selec WellcomeScreen or begin the game.
         private bool _play;
+        // Flag for show Game Over Screem.
         private bool _gameOver_screen;
                 
         public Level level;
@@ -23,10 +24,7 @@ namespace Arkanoid_02
             Content.RootDirectory = "Content";
             IsMouseVisible = false;
 
-            // Flag for selec WellcomeScreen or begin the game.
             _play = false;
-
-            // Flag for show Game Over Screem.
             _gameOver_screen = false;
 
             _graphics.PreferredBackBufferWidth = 843;
@@ -53,17 +51,11 @@ namespace Arkanoid_02
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (Keyboard.GetState().IsKeyDown(Keys.P))
-               { _play = true; screen.playOn = true; }
-
-            if (_gameOver_screen)
-            {
-                if (screen.ScreenBlackGameOver(gameTime))
-                {_gameOver_screen = false; _play = false;}
-            }
-
             if (!_play && !_gameOver_screen)
                 screen.WellcomeScreen(gameTime);
+
+            if (Keyboard.GetState().IsKeyDown(Keys.P))
+               { _play = true; screen.playOn = true; }
 
             if (_play)
             {
@@ -74,6 +66,13 @@ namespace Arkanoid_02
                     _play = false;
                 }
             }
+
+            if (_gameOver_screen)
+            {
+                if (screen.ScreenBlackGameOver(gameTime))
+                {_gameOver_screen = false; _play = false;}
+            }
+
 
             // TODO: Add your update logic here
             base.Update(gameTime);

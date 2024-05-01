@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace Arkanoid_02
 {
@@ -26,7 +27,7 @@ namespace Arkanoid_02
         /// <returns> Segment, distance tuple </returns>
         public static (float, Segment) Collision(List<Segment> segment, Vector2 direction, Vector2 position)
         {
-            float minDistance = float.PositiveInfinity;
+            float minDistance = float.PositiveInfinity;            
             Segment collider = null;
 
             // Seeking the nearest segment.
@@ -57,18 +58,6 @@ namespace Arkanoid_02
             return (minDistance, collider);
         }
 
-        /// <summary> Calculate the proyection the point on the line. </summary>
-        /// <param name="linePnt"> The starting point of the line </param>
-        /// <param name="lineDir"> The direction that follow the point </param>
-        /// <param name="point"> Proyected point on the line </param>
-        /// <returns></returns>
-        public static Vector2 NearestPointOnLine(Vector2 linePnt, Vector2 lineDir, Vector2 point)
-        {
-            var v = point - linePnt;
-            var d = Vector2.Dot(v, lineDir); // This vector "d" have been send Normalized.
-            return linePnt + lineDir * d;
-        }
-
         /// <summary> Calculate the distance projection through the direction vector to the "line". </summary>
         /// <param name="point">The position of the object</param>
         /// <param name="direction">The direction through the object move</param>
@@ -86,6 +75,18 @@ namespace Arkanoid_02
                 return (pointOnLine - point).Length() / Vector2.Dot(direction, Vector2.Normalize(pointOnLine - point)); //There is a finite distance from that point to the line along the vector
             else
                 return float.PositiveInfinity;  //Nope, we are pointing the wrong way around
+        }
+
+        /// <summary> Calculate the proyection the point on the line. </summary>
+        /// <param name="linePnt"> The starting point of the line </param>
+        /// <param name="lineDir"> The direction that follow the point </param>
+        /// <param name="point"> Proyected point on the line </param>
+        /// <returns></returns>
+        public static Vector2 NearestPointOnLine(Vector2 linePnt, Vector2 lineDir, Vector2 point)
+        {
+            var v = point - linePnt;
+            var d = Vector2.Dot(v, lineDir); // This vector "d" have been send Normalized.
+            return linePnt + lineDir * d;
         }
 
         /// <summary> This method claculate if the point is on the ini-end segment. </summary>

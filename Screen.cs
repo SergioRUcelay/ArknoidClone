@@ -39,6 +39,30 @@ namespace Arkanoid_02
             playOn = true;
         }
 
+        public void WellcomeScreen(GameTime gameTime)
+        {
+            time_draw += gameTime.ElapsedGameTime.TotalSeconds;
+
+            WellcomeSong = content.Load<Song>("Sounds/Start_Demo");
+            Wellcome = content.Load<Texture2D>("Screens/MainScreen");
+            PressP = content.Load<SpriteFont>("Fonts/MainScreen");
+            string Wellcome_text = "Press    P    to    play";
+            Draw(Wellcome, WellcomePosition);
+
+            if (time_draw < 1)
+                DrawFont(PressP, Wellcome_text, PressP_Position);
+
+            if (time_draw > 2)
+                time_draw = 0;
+
+            if (playOn)
+            {
+                MediaPlayer.Play(WellcomeSong);
+                playOn = false;
+            }
+
+            PlayOnBlack = true;
+        }
         public bool ScreenBlackGameOver(GameTime gameTime)
         {
             
@@ -69,31 +93,6 @@ namespace Arkanoid_02
             }
             return false;
             
-        }
-
-        public void WellcomeScreen(GameTime gameTime)
-        {
-            time_draw += gameTime.ElapsedGameTime.TotalSeconds;
-
-            WellcomeSong = content.Load<Song>("Sounds/Start_Demo");
-            Wellcome = content.Load<Texture2D>("Screens/MainScreen");
-            PressP = content.Load<SpriteFont>("Fonts/MainScreen");
-            string Wellcome_text = "Press    P    to    play";
-            Draw(Wellcome, WellcomePosition);
-
-            if (time_draw < 1)
-                DrawFont(PressP, Wellcome_text, PressP_Position);
-
-            if (time_draw > 2)
-                time_draw = 0;
-
-            if (playOn)
-            {
-                MediaPlayer.Play(WellcomeSong);
-                playOn = false;
-            }
-
-            PlayOnBlack = true;
         }
 
         private void Draw(Texture2D texture, Vector2 position)
