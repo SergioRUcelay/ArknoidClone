@@ -1,38 +1,43 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using static Arkanoid_02.SpriteArk;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace Arkanoid_02
 {
     public class Level : IDisposable
     {
-        public ContentManager content;             
+        public ContentManager content;
 
         private Ball _ball;
         private Paddle _paddle;
+        private Brick _screen;
         public  Animations blast;
         public  Animations glint;
-        public Screen screen;
 
         private readonly SpriteBatch SpriteBatch;
         private SpriteFont _numberPointFont;
         private SpriteFont _lifeLeft;
         private Texture2D _backGround;
         private Texture2D _arkaLogo;
-      
-        private Song _newlevel;
 
-        private readonly List<Brick> _brickList = new List<Brick>();
-        private readonly List<Segment> _segments= new List<Segment>();
+        private Song _newlevel;
+        private readonly SoundEffect _ballWallBounce;
+
+        private readonly List<Brick> _brickList = new();
+        public readonly List<Segment> _segments= new();
         private readonly string[][] _currentLevel = new string [30][];
+
+        // Vectors describing the boundaries of the screen.
+        private Vector2 B_Limit, A_Limit, C_Limit, D_Limit;
 
         private int _levelNumber;
         static double Level_Time_lifeleft;
@@ -42,6 +47,10 @@ namespace Arkanoid_02
         private int Points { get; set; }
         private int ExtraLifePoints { get; set; }
         private int MaxPoints { get; set; }
+
+        // This variable manages time for speed increment of ball.
+        public float TimeCount;
+        public float ElapsedTime;
 
         // Flag for load Iniciate method only the first time call the Update method
         private bool _iniOn;
@@ -56,21 +65,28 @@ namespace Arkanoid_02
         {
             content = new ContentManager(serviceProvider, "Content");
             SpriteBatch = spriteBatch;
-            _levelNumber = 2;            
+            _levelNumber = 1;
             NumberBricks = 0;
             ExtraLifePoints = 6000;
             Points = 0;
-            MaxPoints = 50000;            
+            MaxPoints = 50000;
             _iniOn = true;
             Maintext = true;
             NextLevel = false;
             glowOnn = false;
+            _ballWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
+            ElapsedTime = 10f;
+
+            A_Limit = new Vector2(25, 100);
+            B_Limit = new Vector2(800, 100);
+            C_Limit = new Vector2(800, 875);
+            D_Limit = new Vector2(25, 875);
         }
 
         private void Iniciate()
         {
             LoadBackgraund();
-
+            
             // Sounds:
             _newlevel = content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
 
@@ -81,14 +97,19 @@ namespace Arkanoid_02
             _numberPointFont = content.Load<SpriteFont>("Fonts/Points");
             _lifeLeft = content.Load<SpriteFont>("Fonts/Points");
 
-            // GameObjets creation.
+            // GameObjets creation:
             _paddle = new Paddle(content, SpriteBatch,"Items/Player", new Vector2(365, 810));
             _paddle.AnimationAdd(1, _paddle.playerAnimation);
             _paddle.OnHit = ()=>_paddle.Bounce.Play();
             _segments.AddRange(_paddle.GetSegments());
             _paddle.AnimationManager[1].Start();
             _ball = new Ball(content, SpriteBatch, "Items/ball", new Vector2(380, 840));
-            
+
+            // Screen`s limits
+            _screen = new(Hard.Blue, content, SpriteBatch, "Items/BlueBlock", Vector2.Zero);
+            _segments.AddRange(_screen.GetScreenSegment(A_Limit, B_Limit, C_Limit, D_Limit));
+            _screen.OnHit = () => _ballWallBounce.Play();
+
             BrickLayout(content);
 
             MediaPlayer.Play(_newlevel);           
@@ -113,7 +134,6 @@ namespace Arkanoid_02
             if (_paddle.visible)
             {
                 PaddleMovement(gametime);
-                //playerAnimation.Update(time);
             }
 
             // Manage ball.
@@ -122,24 +142,30 @@ namespace Arkanoid_02
 
             if (!_ball.Play)
             {
-                _ball.Position.Y = _paddle.Position.Y - _ball.Size.Y;
-                _ball.Position.X = _paddle.Position.X + 60;
+                _ball._circle.Center.Y = _paddle.Position.Y - _ball._circle.Radius;
+                _ball._circle.Center.X = _paddle.Position.X + 70;
             }
-
-            //PointAnimation(gametime);
 
             if (Points >= MaxPoints) MaxPoints = Points;
 
-            if (!_ball.WallBounce()) { _ball.Death(); _paddle.Death(); _ball.can_move = false;
-                _paddle.can_move = false;}
+            if (_ball._circle.Center.Y >= D_Limit.Y + 150)
+            {
+                _ball.Death(); _paddle.Death(); _ball.can_move = false;
+                _paddle.can_move = false;
+            } 
 
-           // if (PlayerCollision() && _ball.Play) { _paddle.Bounce.Play(); }
+            // Code for control the segment collisions.
+            (float mindistance, Segment collider) = ArkaMath.Collision(_segments, _ball.Direction, _ball._circle.Center);
 
-            (float mindistance, Segment collider) = ArkaMath.Collision(_segments, _ball.Direction, _ball.Position);
+            if (mindistance < _ball.Speed * (float)gametime.ElapsedGameTime.TotalSeconds)
+            {
+                Bounces(mindistance, collider, gametime);
+            }
+            else
+            {
+                IncreaseBallSpeedOverTime(gametime);                
+            }
 
-            Bounces(mindistance, collider, gametime);            
-
-            //BrickCollision(_brickList);
             Extralife();
                         
             if (NumberBricks <= 0)
@@ -178,9 +204,9 @@ namespace Arkanoid_02
         private void BrickLayout(ContentManager content)
         {
             Vector2 iniposition = new (0,0);
-            Vector2 position = new (0,0);
-            Vector2 bricksizeX = new(61, 0); // new (_brick.Size.X,0);
-            Vector2 bricksizeY = new(0, 30); // new (0, _brick.Size.Y);
+            Vector2 position    = new (0,0);
+            Vector2 bricksizeX  = new (61,0); // new (_brick.Size.X,0);
+            Vector2 bricksizeY  = new (0,30); // new (0, _brick.Size.Y);
 
             if (_levelNumber <= _maxlevelNumber)
             {
@@ -278,6 +304,7 @@ namespace Arkanoid_02
                                 _brick.AnimationAdd(2, glint);
                                 _brickList.Add(_brick);
                                 _segments.AddRange(_brick.GetSegments());
+                                _brick.OnHit = () => DestroyBrick(_brick);
                                 position += bricksizeX;
                                 break;
                         }
@@ -315,7 +342,7 @@ namespace Arkanoid_02
         }
 
         /// <summary>
-        /// To beging the ball moviment.
+        /// To beging the ball movement.
         /// </summary>
         public void ReleaseBall()
         {
@@ -325,147 +352,6 @@ namespace Arkanoid_02
 
         }
 
-        public bool PlayerCollision()
-        {
-            if (_paddle.visible == false) return false;
-
-            if (_paddle.Position.X + _paddle.Size.X > _ball.Position.X && (_ball.Position.X + _ball.Size.X) > _paddle.Position.X &&
-                    (_paddle.Position.Y + _paddle.Size.Y) > _ball.Position.Y && (_ball.Position.Y + _ball.Size.Y) > _paddle.Position.Y)
-            {
-                // Right
-                if (_ball.Position.X > _paddle.Position.X && _ball.Position.X + _ball.Size.X > _paddle.Position.X + _paddle.Size.X && _ball.Direction.X < 0)
-                {
-                    _ball.Bounce(new Vector2(1, 0));
-                }
-
-                // Left
-                if (_ball.Position.X < _paddle.Position.X && _ball.Position.X + _ball.Size.X < _paddle.Position.X + _paddle.Size.X && _ball.Direction.X > 0)
-                {
-                    _ball.Bounce(new Vector2(1, 0));
-                }
-
-                // Top
-                if (_ball.Position.Y < _paddle.Position.Y && _ball.Position.Y + _ball.Size.Y < _paddle.Position.Y + _paddle.Size.Y && _ball.Direction.Y > 0)
-                {
-                    _ball.Bounce(new Vector2(0, 1));
-                }
-
-                // Botton
-                if (_ball.Position.Y > _paddle.Position.Y && _ball.Position.Y + _ball.Size.Y > _paddle.Position.Y + _paddle.Size.Y && _ball.Position.X < _paddle.Position.X + _paddle.Size.X && _ball.Direction.Y < 0)
-                {
-                    _ball.Bounce(new Vector2(0, 1));
-                }
-                return true;
-            }
-            return false;
-        }
-        public bool BrickCollision(List<Brick> bricksOrder)
-        {
-            foreach (Brick brick in bricksOrder)
-            {
-                bool on = true;
-                if (brick.visible)
-                {
-                    if (_ball.R_Collider.Intersects(brick.R_Collider))
-                    {
-                     
-                        // Right
-                        if (_ball.Position.X > brick.Position.X && _ball.Position.X + _ball.Size.X > brick.Position.X + brick.Size.X && _ball.Direction.X < 0 && on)
-                        {
-                            _ball.Bounce(new Vector2(1, 0));
-                            on = false;
-                        }
-
-                        // Left
-                        if (_ball.Position.X < brick.Position.X && _ball.Position.X + _ball.Size.X < brick.Position.X + brick.Size.X && _ball.Direction.X > 0 && on)
-                        {
-                            _ball.Bounce(new Vector2(1, 0));
-                            on = false;
-                        }
-
-                        // Top
-                        if (_ball.Position.Y < brick.Position.Y && _ball.Position.Y + _ball.Size.Y < brick.Position.Y + brick.Size.Y && _ball.Direction.Y > 0 && on)
-                        {
-                            _ball.Bounce(new Vector2(0, 1));
-                            on = false;
-                        }
-
-                        // Botton
-                        if (_ball.Position.Y > brick.Position.Y && _ball.Position.Y + _ball.Size.Y > brick.Position.Y + brick.Size.Y && _ball.Position.X < brick.Position.X + brick.Size.X && _ball.Direction.Y < 0 && on)
-                        {
-                            _ball.Bounce(new Vector2(0, -1));
-                           
-                        }
-                        
-                        if (brick.destructible)
-                        {
-                            brick.Hit--;
-                            if (brick.Hit >= 1)
-                            {
-                                brick.BrickBounce.Play();
-                                switch (brick.hardness)
-                                {
-                                    case Hard.Yellow:
-                                        brick.glin_animation = true;
-                                        brick.ani_key = 2;
-                                        brick.AnimationManager[2].Start();
-                                        break;
-
-                                    case Hard.Pink:
-                                        brick.glin_animation = true;
-                                        brick.ani_key = 2;
-                                        brick.AnimationManager[2].Start();
-                                        break;
-                                }
-                            }
-
-
-                            if (brick.Hit <= 0)
-                            {
-                                brick.SetVisible(false);
-                                brick.blas_animation = true;
-                                brick.ani_key = 1;
-                                brick.AnimationManager[1].Start();
-                                brick.DestroyBounce.Play();
-                                NumberBricks--;
-
-                                switch (brick.hardness)
-                                {
-                                    case Hard.Blue:
-                                        Points += 50;
-                                        break;
-
-                                    case Hard.Green:
-                                        Points += 50;
-                                        break;
-
-                                    case Hard.Yellow:
-                                        Points += 100;
-                                        break;
-
-                                    case Hard.Pink:
-                                        Points += 300;
-                                        break;
-                                }
-
-                            }
-
-                        }
-                        if (!brick.destructible)
-                        {
-                            brick.glin_animation = true;
-                            brick.ani_key = 2;
-                            brick.AnimationManager[2].Start();
-                            brick.MetalBounce.Play();
-                        }
-                        
-                    }
-                }
-
-            }
-            return false;
-        }
-      
         public void AchievedLevel()
         {   
             Dispose();
@@ -493,7 +379,6 @@ namespace Arkanoid_02
                 ExtraLifePoints += Points;
                 _paddle.Life += 1;
                 _paddle.ExtraLife.Play();
-
             }
         }
 
@@ -517,12 +402,9 @@ namespace Arkanoid_02
 
         public void Draw(GameTime gameTime)
         {
-
+            
             SpriteBatch.Draw(_backGround, new Vector2(0, 0), Color.White);
 
-            if(_segments[3].ActiveSegment == true)
-                SpriteBatch.Draw(_paddle.myTexture, new Rectangle((int)_segments[3].end.X, (int)_segments[3].end.Y, (int)(_segments[3].ini.X - _segments[3].end.X), 10), Color.DarkOliveGreen);
-            
             // Score
             string points = Points.ToString();
             SpriteBatch.DrawString(_numberPointFont, points, new Vector2(125,20), Color.WhiteSmoke);
@@ -563,8 +445,8 @@ namespace Arkanoid_02
                 // Here call a Draw method of the animation objet. We need call a Dictionary that containt all the animation created.
                 if (brick.blas_animation)
                 {
-                    brick.AnimationManager[brick.ani_key].Update(gameTime);
-                    brick.AnimationManager[brick.ani_key].Draw(SpriteBatch, brick.R_blast);
+                    brick.AnimationManager[brick.animation_key].Update(gameTime);
+                    brick.AnimationManager[brick.animation_key].Draw(SpriteBatch, brick.R_blast);
                 }
             }
 
@@ -573,33 +455,23 @@ namespace Arkanoid_02
                 // Here call a Draw method of the animation objet. We need call a Dictionary that containt all the animation created.
                 if (brick.glin_animation)
                 {
-                    brick.AnimationManager[brick.ani_key].Update(gameTime);
-                    brick.AnimationManager[brick.ani_key].Draw(SpriteBatch, brick.R_Collider);
+                    brick.AnimationManager[brick.animation_key].Update(gameTime);
+                    brick.AnimationManager[brick.animation_key].Draw(SpriteBatch, brick.R_Collider);
                 }
             }
 
             if (Level_Time_lifeleft > 2.6)
             {
-                
                 _paddle.AnimationManager[1].UpdateLoop(gameTime);
-               // _paddle.AnimationManager[1].Draw(SpriteBatch, _paddle.Position);             
-                _ball.Draw(gameTime);
+                _paddle.AnimationManager[1].Draw(SpriteBatch, _paddle.Position);             
+                _ball.Draw(_ball._circle.Center);
                 _ball.can_move = true;
                 _paddle.can_move = true;
             }
-
         }
-        public static void Mensage()
 
-        {
-            Console.WriteLine("Ouch!!!! ma dao, ma dao");
-        }
         public void DestroyBrick(Brick brick)
         {
-
-            //foreach (var segment in _segments)
-            //    segment.ActiveSegment &= segment.owner != brick;
-            //brick.visible = false;
 
             if (brick.destructible)
             {
@@ -611,26 +483,26 @@ namespace Arkanoid_02
                     {
                         case Hard.Yellow:
                             brick.glin_animation = true;
-                            brick.ani_key = 2;
+                            brick.animation_key = 2;
                             brick.AnimationManager[2].Start();
                             break;
 
                         case Hard.Pink:
                             brick.glin_animation = true;
-                            brick.ani_key = 2;
+                            brick.animation_key = 2;
                             brick.AnimationManager[2].Start();
                             break;
                     }
                 }
 
-
                 if (brick.Hit <= 0)
                 {
                     foreach (var segment in _segments)
                         segment.ActiveSegment &= segment.owner != brick;
-                    brick.SetVisible(false);
+
+                    brick.visible = false;
                     brick.blas_animation = true;
-                    brick.ani_key = 1;
+                    brick.animation_key = 1;
                     brick.AnimationManager[1].Start();
                     brick.DestroyBounce.Play();
                     NumberBricks--;
@@ -653,77 +525,50 @@ namespace Arkanoid_02
                             Points += 300;
                             break;
                     }
-
                 }
-
             }
-
+            if (!brick.destructible)
+            {
+                brick.glin_animation = true;
+                brick.animation_key = 2;
+                brick.AnimationManager[2].Start();
+                brick.MetalBounce.Play();
+            }
         }
-
-        public void PointAnimation(GameTime gameTime)
+                
+        /// <summary>
+        /// Animate the ball and the increasing his speed over time.
+        /// </summary>
+        /// <param name="gameTime"></param>
+        public void IncreaseBallSpeedOverTime(GameTime gameTime)
         {
             if (_ball.Play)
-                _ball.Position += _ball.Speed * (float)gameTime.ElapsedGameTime.TotalSeconds * _ball.Direction;
+            {
+                TimeCount += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                _ball._circle.Center += _ball.Speed * _ball.Direction * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if (TimeCount > ElapsedTime && _ball.Speed < _ball.Maxspeed)
+                {
+                    _ball.Speed += 15f;
+                    ElapsedTime += 5f;
+                }                
+            }
         }
 
         public void Bounces(float minDistance, Segment segment, GameTime gameTime)
         {
-            if (minDistance < _ball.Speed * (float)gameTime.ElapsedGameTime.TotalSeconds)
-            { 
-
-                _ball.Position += minDistance * _ball.Direction;
-                _ball.Direction = Vector2.Reflect(_ball.Direction, segment.Normal);
-                segment.owner.OnHit();
-                //Bounces(mindistance, collider);
-
-            }
-            else PointAnimation(gameTime);
-            //_ball.Position += minDistance * _ball.Direction;
-            //_ball.Direction = Vector2.Reflect(_ball.Direction, segment.Normal);
+            _ball._circle.Center += minDistance * _ball.Direction;
+            _ball.Direction = Vector2.Reflect(_ball.Direction, segment.Normal);
+            segment.owner.OnHit();
         }
-
-        public void HitBrick(Brick _brick)
-        {
-            if (_brick.visible)
-            {
-                
-                _brick.Hit--;
-                if (_brick.Hit >= 1)
-                    _brick.BrickBounce.Play();
-
-                if (_brick.Hit <= 0)
-                {
-                    _brick.SetVisible(false);
-                    _brick.DestroyBounce.Play();
-                    NumberBricks--;
-
-                    switch (_brick.hardness)
-                    {
-                        case Hard.Blue:
-                            Points += 50;
-                            break;
-
-                        case Hard.Green:
-                            Points += 50;
-                            break;
-
-                        case Hard.Yellow:
-                            Points += 100;
-                            break;
-
-                        case Hard.Pink:
-                            Points += 300;
-                            break;
-                    }
-                }
-
-            }
-            if (!_brick.destructible)
-                _brick.MetalBounce.Play();
-        }
-
         public void Dispose() => content.Unload();
 
-     }
+        public async void CountDown(int seg)
+        {
+            int TimeRemaining = seg;
+            int ActualTime = Stopwatch.
+        }
+    }
 }       
         

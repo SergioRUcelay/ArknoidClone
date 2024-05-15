@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Arkanoid;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -17,6 +18,7 @@ namespace Arkanoid_02
                 
         public Level level;
         public Screen screen;
+        public Shapes shapes;
         
         public ArkaMain()
         {
@@ -33,17 +35,16 @@ namespace Arkanoid_02
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             level = new Level(Services, _spriteBatch);
             screen = new Screen(Services, _spriteBatch);
-                       
+            shapes = new Shapes(this);
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
-            // TODO: use this.Content to load your game content here
+           
         }
 
         protected override void Update(GameTime gameTime)
@@ -55,7 +56,10 @@ namespace Arkanoid_02
                 screen.WellcomeScreen(gameTime);
 
             if (Keyboard.GetState().IsKeyDown(Keys.P))
-               { _play = true; screen.playOn = true; }
+            { 
+                _play = true;
+                screen.playOn = true;
+            }
 
             if (_play)
             {
@@ -73,22 +77,25 @@ namespace Arkanoid_02
                 {_gameOver_screen = false; _play = false;}
             }
 
-
-            // TODO: Add your update logic here
             base.Update(gameTime);
         }
         
         protected override void Draw(GameTime gameTime)
         {
-            //GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.CornflowerBlue);
 
             _spriteBatch.Begin();
-
             if (_play)
-                level.Draw(gameTime); //, spriteBatch);
-                       
+                level.Draw(gameTime);
             _spriteBatch.End();
-            // TODO: Add your drawing code here
+
+            //shapes.Begin();
+            //foreach (var seg in level._segments)
+            //{
+            //    if(seg.ActiveSegment)
+            //    shapes.Drawline(new (seg.ini.X, 900-seg.ini.Y), new (seg.end.X, 900 - seg.end.Y),1,Color.White);
+            //}
+            //shapes.End();
 
             base.Draw(gameTime);
         }

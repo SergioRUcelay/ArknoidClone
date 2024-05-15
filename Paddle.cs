@@ -32,7 +32,7 @@ namespace Arkanoid_02
         {
             _paddleDirection = new Vector2(400f, 0);
             Ini = pos;
-            Life = 50;
+            Life = 3;
             _paddleSpeed = 1.5f;
             _dead = content.Load<SoundEffect>("Sounds/PlayerDead");
             Bounce = content.Load<SoundEffect>("Sounds/PlayerBounce");
@@ -49,14 +49,14 @@ namespace Arkanoid_02
             {
                 Position = Ini;
                 MediaPlayer.Play(_newlevel);
-                SetVisible(true);
+                visible = true;
             }
         }
 
         public void Death()
         {
             Life--;
-            SetVisible(false);
+            visible = false;
             _dead.Play();
             Level.Maintext = true;
             Level.NextLevel = false;
@@ -68,10 +68,11 @@ namespace Arkanoid_02
         {
             return new Segment[]
             {
-                 new() {end = Position+new Vector2 (Size.X,0),     ini = Position+new Vector2(Size.X,Size.Y), owner = this, ActiveSegment = true},
-                 new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true},
-                 new() {end = Position+new Vector2(0,Size.Y),      ini = Position,                            owner = this, ActiveSegment = true},
-                 new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true},
+                 new() {ini = Position + new Vector2(Size.X, Size.Y),       end = Position + new Vector2(Size.X,Size.Y/4), owner = this, ActiveSegment = true}, // Flat Right
+                 new() {ini = Position + new Vector2(Size.X,Size.Y/4), end = Position + new Vector2(90,0),            owner = this, ActiveSegment = true}, // Inclined Right.
+                 new() {ini = Position + new Vector2(90,0),            end = Position + new Vector2(20,0),            owner = this, ActiveSegment = true}, // Up.
+                 new() {ini = Position + new Vector2(20,0),            end = Position + new Vector2 (0,Size.Y/4),     owner = this, ActiveSegment = true}, // Inclined Left.
+                 new() {ini = Position + new Vector2(0,Size.Y/4),      end = Position + new Vector2 (0,Size.Y),  owner = this, ActiveSegment = true}, // Flat Left.
             };
         }
 

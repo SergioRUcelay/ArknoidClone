@@ -65,7 +65,6 @@ namespace Arkanoid_02
         }
         public bool ScreenBlackGameOver(GameTime gameTime)
         {
-            
             time_draw += gameTime.ElapsedGameTime.TotalSeconds;
 
             GameOverSong = content.Load<Song>("Sounds/05_-_Arkanoid_-_NES_-_Game_Over");
@@ -74,9 +73,6 @@ namespace Arkanoid_02
             {
                 BlackGameOver = content.Load<Texture2D>("Screens/Black");
                 Draw(BlackGameOver, WellcomePosition);
-                //PressP = content.Load<SpriteFont>("Fonts/MainScreen");
-                //string Game_Over = "G A M E    O V E R";
-                //DrawFont(PressP, Game_Over, BlackGameOver_Position);
             }
 
             if (PlayOnBlack)
@@ -89,27 +85,21 @@ namespace Arkanoid_02
             {
                 time_draw = 0;  
                 return true;
-
             }
             return false;
-            
         }
 
         private void Draw(Texture2D texture, Vector2 position)
         {
             SpriteBatch.Begin();
-
             SpriteBatch.Draw(texture, position, Color.White);
-
             SpriteBatch.End();
         }
 
         private void DrawFont(SpriteFont texture, String TextToShow, Vector2 position)
         {
             SpriteBatch.Begin();
-
             SpriteBatch.DrawString(texture, TextToShow, position, Color.White);
-
             SpriteBatch.End();
         }
     }

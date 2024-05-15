@@ -93,10 +93,10 @@ namespace Arkanoid_02
                 sprite.Draw(aniTexture, rect, _frames[currentFrame], Color.White);
             }
         }
-
-        public SpriteBatch _spritebatch;
+       
+        public SpriteBatch _spritebatch;       
         public readonly Texture2D myTexture;
-        public Vector2 Position;        
+        public Vector2 Position;
         public Vector2 anima_position;
 
         public abstract Action OnHit { get; set; }
@@ -137,14 +137,14 @@ namespace Arkanoid_02
         public Dictionary<int, Animations> AnimationManager = new();
         public ContentManager content;
         
-        public int ani_key;
+        public int animation_key;
         public bool visible;
         public bool can_move;
         public bool blas_animation;
         public bool glin_animation;
         
         public SpriteArk(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos)
-        {   
+        {
             this.content = content;
             _spritebatch = spriteBatch;
             myTexture = content.Load<Texture2D>(texture);
@@ -163,12 +163,5 @@ namespace Arkanoid_02
             if(visible)
                 _spritebatch.Draw(myTexture, Position, Color.White);
         }
-
-        public void SetVisible(bool v) { visible = v; }
-
-
-
     }
-    
-
 }

@@ -8,11 +8,11 @@ namespace Arkanoid_02
 {
     public enum Hard { Metal, Blue, Green, Yellow, Pink };
 
-    public class Brick : SpriteArk 
+    public class Brick : SpriteArk
     {
         public override Action OnHit { get; set; }
 
-        public int Hit {get; set;}
+        public int Hit { get; set; }
         public readonly Hard hardness;
         public bool destructible;
 
@@ -23,10 +23,10 @@ namespace Arkanoid_02
         public Brick(Hard ColorHitValue, ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
             hardness = ColorHitValue;
-            
+
             switch (hardness)
             {
-                case Hard.Metal:                    
+                case Hard.Metal:
                     destructible = false;
                     break;
 
@@ -50,23 +50,10 @@ namespace Arkanoid_02
                     Hit = 3;
                     break;
             }
-            BrickBounce   = content.Load<SoundEffect>("Sounds/HitBrickBounce");
-            MetalBounce   = content.Load<SoundEffect>("Sounds/MetalBounce");
+            BrickBounce = content.Load<SoundEffect>("Sounds/HitBrickBounce");
+            MetalBounce = content.Load<SoundEffect>("Sounds/MetalBounce");
             DestroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
-            
-        }
-      
-        public bool GetDestruc()
-        {
-            return destructible;
-        }
 
-        public void SetDestruc()
-        {
-            if (!destructible)
-                destructible = true;
-            else
-                destructible = false;
         }
 
         public Segment[] GetSegments()
@@ -74,9 +61,20 @@ namespace Arkanoid_02
             return new Segment[]
             {
                     new() {end = Position+new Vector2 (Size.X,0),     ini = Position+new Vector2(Size.X,Size.Y), owner = this, ActiveSegment = true}, // Right
-                    new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true}, // down
+                    new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true}, // Down
                     new() {end = Position+new Vector2(0,Size.Y),      ini = Position,                            owner = this, ActiveSegment = true}, // Left
-                    new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true}, // up
+                    new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true}, // Up
+            };
+        }
+
+        public Segment[] GetScreenSegment(Vector2 A, Vector2 B, Vector2 C, Vector2 D)
+        {
+            return new Segment[]
+            {
+                    new() {end = C+ new Vector2(0,20),                      ini = B + new Vector2(0,-20),                       owner = this, ActiveSegment = true}, // Right
+                    new() {end = D+new Vector2 (-20,0)/* + new Vector2(0,200)*/, ini = C+ new Vector2(20,0)/*+ new Vector2(0,200)*/,  owner = this, ActiveSegment = true}, // Down
+                    new() {end = A+new Vector2(0,-20),                      ini = D + new Vector2(0, +20),                       owner = this, ActiveSegment = true}, // Left
+                    new() {end = B + new Vector2(+20,0),                      ini = A + new Vector2(-20,0),                       owner = this, ActiveSegment = true}, // Up
             };
         }
     }
