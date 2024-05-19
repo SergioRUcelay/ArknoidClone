@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using static Arkanoid_02.SpriteArk;
@@ -16,10 +15,12 @@ namespace Arkanoid_02
     public class Level : IDisposable
     {
         public ContentManager content;
+        public Action create { get; set; }
 
         private Ball _ball;
         private Paddle _paddle;
         private Brick _screen;
+        private Enemy _enemy;
         public  Animations blast;
         public  Animations glint;
 
@@ -34,6 +35,7 @@ namespace Arkanoid_02
 
         private readonly List<Brick> _brickList = new();
         public readonly List<Segment> _segments= new();
+        public readonly List<Enemy> _enemies = new();
         private readonly string[][] _currentLevel = new string [30][];
 
         // Vectors describing the boundaries of the screen.
@@ -43,14 +45,19 @@ namespace Arkanoid_02
         static double Level_Time_lifeleft;
         public double Total_TimeLevel;
         private const int _maxlevelNumber = 4;
-        public int NumberBricks { set; get; }
+        private int NumberBricks { set; get; }
         private int Points { get; set; }
         private int ExtraLifePoints { get; set; }
         private int MaxPoints { get; set; }
 
+        // Manage enemy
+        private Random random { get; set; }
+        private int EnemyNumber { get; set; }
+        private float TimeCountE;
+
         // This variable manages time for speed increment of ball.
-        public float TimeCount;
-        public float ElapsedTime;
+        private float TimeCount;
+        private float ElapsedTime;
 
         // Flag for load Iniciate method only the first time call the Update method
         private bool _iniOn;
@@ -59,7 +66,7 @@ namespace Arkanoid_02
         // Flag for print NextLevel every load new level.
         public static bool NextLevel;
         // Flag to indicate that there was a collision, and call the glow animation.
-        public bool glowOnn;
+        private bool glowOnn;
 
         public Level(IServiceProvider serviceProvider, SpriteBatch spriteBatch)
         {
@@ -76,11 +83,15 @@ namespace Arkanoid_02
             glowOnn = false;
             _ballWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
             ElapsedTime = 10f;
+            EnemyNumber = 0;
+            create = () => CreateEnemy();
 
             A_Limit = new Vector2(25, 100);
             B_Limit = new Vector2(800, 100);
             C_Limit = new Vector2(800, 875);
             D_Limit = new Vector2(25, 875);
+
+            random = new Random();
         }
 
         private void Iniciate()
@@ -118,7 +129,7 @@ namespace Arkanoid_02
             Total_TimeLevel = 0;
             
             _iniOn = false;
-           
+            
         }
 
         public bool Update(GameTime gametime)
@@ -145,6 +156,8 @@ namespace Arkanoid_02
                 _ball._circle.Center.Y = _paddle.Position.Y - _ball._circle.Radius;
                 _ball._circle.Center.X = _paddle.Position.X + 70;
             }
+            // Manage enemy.
+            if (_ball.Play == true && EnemyNumber <= 4 ) CountDown(gametime, 5);
 
             if (Points >= MaxPoints) MaxPoints = Points;
 
@@ -352,6 +365,19 @@ namespace Arkanoid_02
 
         }
 
+        public void CreateEnemy()
+        {
+            var text = random.Next(4);
+            var pos = random.Next(1,3);
+            _enemy = new(text, content, SpriteBatch, pos);
+            _enemies.Add(_enemy);
+            blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
+            _enemy.AnimationAdd(2, blast);
+            _enemy.OnHit = () => DestroyEnemy(_enemy);           
+            _enemy.EnemyExist = true;
+            EnemyNumber++;
+        }
+
         public void AchievedLevel()
         {   
             Dispose();
@@ -362,7 +388,10 @@ namespace Arkanoid_02
 
             _brickList.Clear();
             _segments.Clear();
+            _enemies.Clear();
+            //_enemy = null;
             NumberBricks = 0;
+            EnemyNumber = 0;
             Maintext = false;
             NextLevel = true;
             _ball.can_move = false;
@@ -387,6 +416,7 @@ namespace Arkanoid_02
             Dispose();
             _brickList.Clear();
             _segments.Clear();
+            _enemies.Clear();
             _iniOn = true;
             Maintext = true;
             NextLevel = false;
@@ -394,6 +424,7 @@ namespace Arkanoid_02
             _paddle.can_move = false;
             Level_Time_lifeleft = 0;
             _levelNumber = 1;
+            EnemyNumber = 0;
             Points = 0;
             NumberBricks = 0;
             ExtraLifePoints = 3000;
@@ -437,7 +468,6 @@ namespace Arkanoid_02
             {
                 // Here call a Draw method of the objet.
                 brick.Draw(gameTime);
-
             }
 
             foreach (var brick in _brickList)
@@ -468,6 +498,16 @@ namespace Arkanoid_02
                 _ball.can_move = true;
                 _paddle.can_move = true;
             }
+
+            foreach (var enemies in _enemies)
+            {
+                if (enemies!=null)
+                {
+                    enemies.AnimationManager[1].UpdateLoop(gameTime);
+                    enemies.AnimationManager[1].Draw(SpriteBatch, enemies.EnemyPosition);
+                }
+            }
+            
         }
 
         public void DestroyBrick(Brick brick)
@@ -535,7 +575,15 @@ namespace Arkanoid_02
                 brick.MetalBounce.Play();
             }
         }
-                
+
+        public void DestroyEnemy(Enemy enemy)
+        {
+            foreach (var segment in _segments)
+                segment.ActiveSegment &= segment.owner != enemy;
+            enemy.AnimationManager[2].Start();
+            enemy.Dead.Play();
+        }
+
         /// <summary>
         /// Animate the ball and the increasing his speed over time.
         /// </summary>
@@ -562,12 +610,22 @@ namespace Arkanoid_02
             _ball.Direction = Vector2.Reflect(_ball.Direction, segment.Normal);
             segment.owner.OnHit();
         }
-        public void Dispose() => content.Unload();
 
-        public async void CountDown(int seg)
+        public void Dispose()
         {
-            int TimeRemaining = seg;
-            int ActualTime = Stopwatch.
+            //Dispose(true);
+            GC.SuppressFinalize(this);
+        } /*=> content.Unload();*/
+
+        public void CountDown(GameTime gametime, float time)
+        {
+            TimeCountE += (float)gametime.ElapsedGameTime.TotalSeconds;
+            if (time <= TimeCountE)
+            {   
+                create();
+                TimeCountE = 0;
+                Console.WriteLine(EnemyNumber);
+            }
         }
     }
 }       

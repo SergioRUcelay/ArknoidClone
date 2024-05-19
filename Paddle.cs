@@ -33,7 +33,7 @@ namespace Arkanoid_02
             _paddleDirection = new Vector2(400f, 0);
             Ini = pos;
             Life = 3;
-            _paddleSpeed = 1.5f;
+            _paddleSpeed = 2f;
             _dead = content.Load<SoundEffect>("Sounds/PlayerDead");
             Bounce = content.Load<SoundEffect>("Sounds/PlayerBounce");
             ExtraLife = content.Load<SoundEffect>("Sounds/ExtraLife");

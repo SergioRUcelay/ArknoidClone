@@ -153,6 +153,14 @@ namespace Arkanoid_02
             can_move = false;
         }
 
+        public SpriteArk(ContentManager content, SpriteBatch spriteBatch,int pos)
+        {
+            this.content = content;
+            _spritebatch = spriteBatch;
+            visible = true;
+            can_move = false;
+        }
+
         public void AnimationAdd(int key, Animations ani)
         {   
             AnimationManager.Add(key, ani);

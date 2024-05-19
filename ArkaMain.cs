@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Arkanoid_02
 {
@@ -19,6 +21,8 @@ namespace Arkanoid_02
         public Level level;
         public Screen screen;
         public Shapes shapes;
+
+        public int ActualTime;
         
         public ArkaMain()
         {
@@ -82,8 +86,6 @@ namespace Arkanoid_02
         
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
             _spriteBatch.Begin();
             if (_play)
                 level.Draw(gameTime);
@@ -92,12 +94,12 @@ namespace Arkanoid_02
             //shapes.Begin();
             //foreach (var seg in level._segments)
             //{
-            //    if(seg.ActiveSegment)
-            //    shapes.Drawline(new (seg.ini.X, 900-seg.ini.Y), new (seg.end.X, 900 - seg.end.Y),1,Color.White);
+            //    if (seg.ActiveSegment)
+            //        shapes.Drawline(new(seg.ini.X, 900 - seg.ini.Y), new(seg.end.X, 900 - seg.end.Y), 1, Color.White);
             //}
             //shapes.End();
 
             base.Draw(gameTime);
-        }
+        }       
     }
 }

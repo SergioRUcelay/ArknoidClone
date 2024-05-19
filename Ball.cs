@@ -38,7 +38,7 @@ namespace Arkanoid_02
             _circle = new Circle(myTexture);
             StarDirection.Normalize();
             Direction = StarDirection;            
-            Speed = 800;
+            Speed = 5000;
             Maxspeed = 1000;
             Ini = pos + _circle.Center;  
             Play = false;            
