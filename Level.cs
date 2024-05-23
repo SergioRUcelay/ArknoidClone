@@ -4,10 +4,12 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using static Arkanoid_02.SpriteArk;
 
 namespace Arkanoid_02
@@ -15,7 +17,8 @@ namespace Arkanoid_02
     public class Level : IDisposable
     {
         public ContentManager content;
-        public Action create { get; set; }
+        public GameTime gametime;
+        public Action Create { get; set; }
 
         private Ball _ball;
         private Paddle _paddle;
@@ -51,7 +54,7 @@ namespace Arkanoid_02
         private int MaxPoints { get; set; }
 
         // Manage enemy
-        private Random random { get; set; }
+        private Random Random { get; set; }
         private int EnemyNumber { get; set; }
         private float TimeCountE;
 
@@ -65,13 +68,12 @@ namespace Arkanoid_02
         public static bool Maintext;
         // Flag for print NextLevel every load new level.
         public static bool NextLevel;
-        // Flag to indicate that there was a collision, and call the glow animation.
-        private bool glowOnn;
 
-        public Level(IServiceProvider serviceProvider, SpriteBatch spriteBatch)
+        public Level(IServiceProvider serviceProvider, GameTime gametime, SpriteBatch spriteBatch)
         {
             content = new ContentManager(serviceProvider, "Content");
             SpriteBatch = spriteBatch;
+            this.gametime = gametime;
             _levelNumber = 1;
             NumberBricks = 0;
             ExtraLifePoints = 6000;
@@ -80,18 +82,17 @@ namespace Arkanoid_02
             _iniOn = true;
             Maintext = true;
             NextLevel = false;
-            glowOnn = false;
             _ballWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
             ElapsedTime = 10f;
             EnemyNumber = 0;
-            create = () => CreateEnemy();
+            Create = () => CreateEnemy();
 
             A_Limit = new Vector2(25, 100);
             B_Limit = new Vector2(800, 100);
             C_Limit = new Vector2(800, 875);
             D_Limit = new Vector2(25, 875);
 
-            random = new Random();
+            Random = new Random();
         }
 
         private void Iniciate()
@@ -129,23 +130,18 @@ namespace Arkanoid_02
             Total_TimeLevel = 0;
             
             _iniOn = false;
-            
         }
 
         public bool Update(GameTime gametime)
         {
-            if (_iniOn)
-                Iniciate();
+            if (_iniOn) Iniciate();
                         
             Level_Time_lifeleft += gametime.ElapsedGameTime.TotalSeconds;
 
             // Manage paddle.
             _paddle.Start();
 
-            if (_paddle.visible)
-            {
-                PaddleMovement(gametime);
-            }
+            if (_paddle.visible) PaddleMovement(gametime);
 
             // Manage ball.
             ReleaseBall();
@@ -156,8 +152,12 @@ namespace Arkanoid_02
                 _ball._circle.Center.Y = _paddle.Position.Y - _ball._circle.Radius;
                 _ball._circle.Center.X = _paddle.Position.X + 70;
             }
+
             // Manage enemy.
-            if (_ball.Play == true && EnemyNumber <= 4 ) CountDown(gametime, 5);
+            if (_ball.Play == true && EnemyNumber <= 5 ) CountDown(gametime, 5);
+            foreach (var enemies in _enemies) enemies?.Animation(gametime);
+            //if (enemies != null)
+            //enemies?.Animation(gametime);
 
             if (Points >= MaxPoints) MaxPoints = Points;
 
@@ -171,13 +171,9 @@ namespace Arkanoid_02
             (float mindistance, Segment collider) = ArkaMath.Collision(_segments, _ball.Direction, _ball._circle.Center);
 
             if (mindistance < _ball.Speed * (float)gametime.ElapsedGameTime.TotalSeconds)
-            {
-                Bounces(mindistance, collider, gametime);
-            }
+              Bounces(mindistance, collider, gametime);
             else
-            {
-                IncreaseBallSpeedOverTime(gametime);                
-            }
+              IncreaseBallSpeedOverTime(gametime);
 
             Extralife();
                         
@@ -189,6 +185,91 @@ namespace Arkanoid_02
             return (_paddle.Life > 0);
         }
 
+        public void Draw(GameTime gameTime)
+        {
+            SpriteBatch.Draw(_backGround, new Vector2(0, 0), Color.White);
+
+            // Score
+            string points = Points.ToString();
+            SpriteBatch.DrawString(_numberPointFont, points, new Vector2(125, 20), Color.WhiteSmoke);
+
+            // High Socre
+            string maxpoints = MaxPoints.ToString();
+            SpriteBatch.DrawString(_numberPointFont, maxpoints, new Vector2(400, 20), Color.WhiteSmoke);
+
+            // Round
+            string l_Number = _levelNumber.ToString();
+            SpriteBatch.DrawString(_numberPointFont, l_Number, new Vector2(635, 34), Color.WhiteSmoke);
+
+            // Lives
+            string l_life = _paddle.Life.ToString();
+            SpriteBatch.DrawString(_numberPointFont, l_life, new Vector2(775, 10), Color.WhiteSmoke);
+
+            if (Maintext)
+            {
+                if (Level_Time_lifeleft < 2.5)
+                    MainText();
+            }
+
+            if (NextLevel)
+            {
+                if (Level_Time_lifeleft < 2.5)
+                    LevelText();
+            }
+
+            foreach (var brick in _brickList)
+            {
+                // Here call a Draw method of the objet.
+                brick.Draw(gameTime);
+            }
+
+            foreach (var brick in _brickList)
+            {
+                // Here call a Draw method of the animation objet. We need call a Dictionary that containt all the animation created.
+                if (brick.blas_animation)
+                {
+                    brick.AnimationManager[brick.animation_key].Update(gameTime);
+                    brick.AnimationManager[brick.animation_key].Draw(SpriteBatch, brick.R_blast);
+                }
+            }
+
+            foreach (var brick in _brickList)
+            {
+                // Here call a Draw method of the animation objet. We need call a Dictionary that containt all the animation created.
+                if (brick.glin_animation)
+                {
+                    brick.AnimationManager[brick.animation_key].Update(gameTime);
+                    brick.AnimationManager[brick.animation_key].Draw(SpriteBatch, brick.R_Collider);
+                }
+            }
+
+            if (Level_Time_lifeleft > 2.6)
+            {
+                _paddle.AnimationManager[1].UpdateLoop(gameTime);
+                _paddle.AnimationManager[1].Draw(SpriteBatch, _paddle.Position);
+                _ball.Draw(_ball._circle.Center);
+                _ball.can_move = true;
+                _paddle.can_move = true;
+            }
+
+            foreach (var enemies in _enemies)
+            {
+                if (enemies != null)
+                {
+                    enemies.AnimationManager[1].UpdateLoop(gameTime);
+                    enemies.AnimationManager[1].Draw(SpriteBatch, enemies.Position);
+                }
+            }
+
+
+            //if (_enemy != null)
+            //{
+            //    _enemy.AnimationManager[1].UpdateLoop(gameTime);
+            //    _enemy.AnimationManager[1].Draw(SpriteBatch, _enemy.Position);
+            //}
+
+        }
+
         private void LoadBackgraund()
         { 
             if (_levelNumber <= _maxlevelNumber)
@@ -197,7 +278,6 @@ namespace Arkanoid_02
                  _backGround = content.Load<Texture2D>(backGroundPath);
             }
             else { throw new NotSupportedException("Level number exceeds content."); }
-
         }
 
         private void MainText()
@@ -231,7 +311,6 @@ namespace Arkanoid_02
                     _currentLevel[i] = new string[] { blockLine.ReadLine() };
                     i++;
                 }
-
             }
             else { throw new NotSupportedException("Level number exceeds content."); }
             
@@ -321,13 +400,11 @@ namespace Arkanoid_02
                                 position += bricksizeX;
                                 break;
                         }
-
                     }
                     position.X = iniposition.X;
                 }
                 position.Y += bricksizeY.Y;
             }
-
         }
 
         /// <summary>
@@ -360,21 +437,20 @@ namespace Arkanoid_02
         public void ReleaseBall()
         {
             var Pushkey = Keyboard.GetState();
-
             if (_ball.can_move && Pushkey.IsKeyDown(Keys.Space)) _ball.Play = true;
-
         }
 
         public void CreateEnemy()
         {
-            var text = random.Next(4);
-            var pos = random.Next(1,3);
-            _enemy = new(text, content, SpriteBatch, pos);
+            var text = Random.Next((int)EnemyType.LAST-1);
+            var pos = Random.Next(1,3);
+            _enemy = new((EnemyType)text, content, SpriteBatch, pos);
             _enemies.Add(_enemy);
             blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
             _enemy.AnimationAdd(2, blast);
             _enemy.OnHit = () => DestroyEnemy(_enemy);           
             _enemy.EnemyExist = true;
+            _enemy.Animation = _enemy.EnemyCircleMovement;
             EnemyNumber++;
         }
 
@@ -398,7 +474,6 @@ namespace Arkanoid_02
             _paddle.can_move = false;
 
             Iniciate();
-           
         }
 
         public void Extralife()
@@ -430,89 +505,8 @@ namespace Arkanoid_02
             ExtraLifePoints = 3000;
         }
 
-
-        public void Draw(GameTime gameTime)
-        {
-            
-            SpriteBatch.Draw(_backGround, new Vector2(0, 0), Color.White);
-
-            // Score
-            string points = Points.ToString();
-            SpriteBatch.DrawString(_numberPointFont, points, new Vector2(125,20), Color.WhiteSmoke);
-
-            // High Socre
-            string maxpoints = MaxPoints.ToString();
-            SpriteBatch.DrawString(_numberPointFont, maxpoints, new Vector2(400,20), Color.WhiteSmoke);
-            
-            // Round
-            string l_Number = _levelNumber.ToString();
-            SpriteBatch.DrawString(_numberPointFont, l_Number, new Vector2(635, 34), Color.WhiteSmoke);
-
-            // Lives
-            string l_life = _paddle.Life.ToString();
-            SpriteBatch.DrawString(_numberPointFont, l_life, new Vector2(775, 10), Color.WhiteSmoke);
-
-            if (Maintext)
-            {
-                if (Level_Time_lifeleft < 2.5)
-                    MainText();
-            }
-
-            if (NextLevel)
-            {
-                if (Level_Time_lifeleft < 2.5)
-                    LevelText();
-            }
-
-            foreach (var brick in _brickList)
-            {
-                // Here call a Draw method of the objet.
-                brick.Draw(gameTime);
-            }
-
-            foreach (var brick in _brickList)
-            {
-                // Here call a Draw method of the animation objet. We need call a Dictionary that containt all the animation created.
-                if (brick.blas_animation)
-                {
-                    brick.AnimationManager[brick.animation_key].Update(gameTime);
-                    brick.AnimationManager[brick.animation_key].Draw(SpriteBatch, brick.R_blast);
-                }
-            }
-
-            foreach (var brick in _brickList)
-            {
-                // Here call a Draw method of the animation objet. We need call a Dictionary that containt all the animation created.
-                if (brick.glin_animation)
-                {
-                    brick.AnimationManager[brick.animation_key].Update(gameTime);
-                    brick.AnimationManager[brick.animation_key].Draw(SpriteBatch, brick.R_Collider);
-                }
-            }
-
-            if (Level_Time_lifeleft > 2.6)
-            {
-                _paddle.AnimationManager[1].UpdateLoop(gameTime);
-                _paddle.AnimationManager[1].Draw(SpriteBatch, _paddle.Position);             
-                _ball.Draw(_ball._circle.Center);
-                _ball.can_move = true;
-                _paddle.can_move = true;
-            }
-
-            foreach (var enemies in _enemies)
-            {
-                if (enemies!=null)
-                {
-                    enemies.AnimationManager[1].UpdateLoop(gameTime);
-                    enemies.AnimationManager[1].Draw(SpriteBatch, enemies.EnemyPosition);
-                }
-            }
-            
-        }
-
         public void DestroyBrick(Brick brick)
         {
-
             if (brick.destructible)
             {
                 brick.Hit--;
@@ -617,12 +611,27 @@ namespace Arkanoid_02
             GC.SuppressFinalize(this);
         } /*=> content.Unload();*/
 
+        //public async Task CountDown(GameTime gametime, float time)
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        TimeCountE += (float)gametime.ElapsedGameTime.TotalSeconds;
+        //        if (time <= TimeCountE)
+        //        {
+        //            Create();
+        //            TimeCountE = 0;
+        //            Console.WriteLine(EnemyNumber);
+        //        }
+        //    });
+        //}
+        //await Task.Delay(5000);
+
         public void CountDown(GameTime gametime, float time)
         {
             TimeCountE += (float)gametime.ElapsedGameTime.TotalSeconds;
             if (time <= TimeCountE)
-            {   
-                create();
+            {
+                Create();
                 TimeCountE = 0;
                 Console.WriteLine(EnemyNumber);
             }

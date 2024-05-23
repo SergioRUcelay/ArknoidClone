@@ -6,6 +6,7 @@ using System;
 
 namespace Arkanoid_02
 {
+
     public enum Hard { Metal, Blue, Green, Yellow, Pink };
 
     public class Brick : SpriteArk

@@ -22,7 +22,6 @@ namespace Arkanoid_02
 
             public  Animations(ContentManager content, string text, int frameX, int frameY, double timeF, int row = 1)
             {
-                //AnimaActive = true;
                 aniTexture = content.Load<Texture2D>(text);
                 totalFrames = frameX;
                 frameTime = timeF;

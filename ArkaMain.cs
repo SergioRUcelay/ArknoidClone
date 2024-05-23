@@ -12,6 +12,7 @@ namespace Arkanoid_02
     {
         public readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private GameTime _gametime;
 
         // Flag for selec WellcomeScreen or begin the game.
         private bool _play;
@@ -28,6 +29,7 @@ namespace Arkanoid_02
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            _gametime = new GameTime();
             IsMouseVisible = false;
 
             _play = false;
@@ -40,7 +42,7 @@ namespace Arkanoid_02
         protected override void Initialize()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            level = new Level(Services, _spriteBatch);
+            level = new Level(Services, _gametime, _spriteBatch);
             screen = new Screen(Services, _spriteBatch);
             shapes = new Shapes(this);
             base.Initialize();
