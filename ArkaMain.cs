@@ -2,9 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Diagnostics;
-using System.Threading;
 
 namespace Arkanoid_02
 {
@@ -55,7 +52,7 @@ namespace Arkanoid_02
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             if (!_play && !_gameOver_screen)
@@ -94,10 +91,10 @@ namespace Arkanoid_02
             _spriteBatch.End();
 
             //shapes.Begin();
-            //foreach (var seg in level._segments)
+            //foreach (var seg in Level._segments)
             //{
             //    if (seg.ActiveSegment)
-            //        shapes.Drawline(new(seg.ini.X, 900 - seg.ini.Y), new(seg.end.X, 900 - seg.end.Y), 1, Color.White);
+            //        shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
             //}
             //shapes.End();
 

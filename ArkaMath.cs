@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace Arkanoid_02
 {
@@ -40,13 +39,13 @@ namespace Arkanoid_02
                 if (Vector2.Dot(direction, _segment.Normal) > 0)
                     continue;
 
-                float newestDistance = DistancePointLineAlongDir(position, direction, _segment.end, _segment.ini);
+                float newestDistance = DistancePointLineAlongDir(position, direction, _segment.End, _segment.Ini);
 
                 // This is the future position.
                 Vector2 c = position + newestDistance * direction;
 
                 // Evaluate if the point it`s in the segment.
-                if (Ifbetween(_segment.ini, _segment.end, c))
+                if (Ifbetween(_segment.Ini, _segment.End, c))
                 {
                     if (newestDistance < minDistance)
                     {

@@ -6,16 +6,20 @@ using System;
 
 namespace Arkanoid_02
 {
-
     public enum Hard { Metal, Blue, Green, Yellow, Pink };
 
     public class Brick : SpriteArk
     {
         public override Action OnHit { get; set; }
+        public Animations Blast;
+        public Animations Glint;
 
         public int Hit { get; set; }
         public readonly Hard hardness;
+
         public bool destructible;
+        public bool blas_animation;
+        public bool glint_animation;
 
         public SoundEffect BrickBounce;
         public SoundEffect MetalBounce;
@@ -24,47 +28,49 @@ namespace Arkanoid_02
         public Brick(Hard ColorHitValue, ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
             hardness = ColorHitValue;
+            destructible = hardness != Hard.Metal;
 
             switch (hardness)
             {
                 case Hard.Metal:
-                    destructible = false;
+                    Glint = new Animations(content, "Animation/Animation_MetalBlock_7", 7, 1, 0.03f);
                     break;
 
                 case Hard.Blue:
-                    destructible = true;
                     Hit = 1;
+                    Blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
                     break;
 
                 case Hard.Green:
-                    destructible = true;
                     Hit = 1;
+                    Blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
                     break;
 
                 case Hard.Yellow:
-                    destructible = true;
                     Hit = 2;
+                    Blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
+                    Glint = new Animations(content, "Animation/Animation_YelowBlock_7", 7, 1, 0.05f);
                     break;
 
                 case Hard.Pink:
-                    destructible = true;
                     Hit = 3;
+                    Blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
+                    Glint = new Animations(content, "Animation/Animation_PinkBlock_7", 7, 1, 0.05f);
                     break;
             }
             BrickBounce = content.Load<SoundEffect>("Sounds/HitBrickBounce");
             MetalBounce = content.Load<SoundEffect>("Sounds/MetalBounce");
             DestroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
-
         }
 
         public Segment[] GetSegments()
         {
             return new Segment[]
             {
-                    new() {end = Position+new Vector2 (Size.X,0),     ini = Position+new Vector2(Size.X,Size.Y), owner = this, ActiveSegment = true}, // Right
-                    new() {end = Position+new Vector2(Size.X,Size.Y), ini = Position+new Vector2(0,Size.Y),      owner = this, ActiveSegment = true}, // Down
-                    new() {end = Position+new Vector2(0,Size.Y),      ini = Position,                            owner = this, ActiveSegment = true}, // Left
-                    new() {end = Position,                            ini = Position+new Vector2 (Size.X,0),     owner = this, ActiveSegment = true}, // Up
+                new() {End = new Vector2 (Size.X,0),     Ini = new Vector2(Size.X,Size.Y), Owner = this, ActiveSegment = true}, // Right
+                new() {End = new Vector2(Size.X,Size.Y), Ini = new Vector2(0,Size.Y),      Owner = this, ActiveSegment = true}, // Down
+                new() {End = new Vector2(0,Size.Y),      Ini = Vector2.Zero,               Owner = this, ActiveSegment = true}, // Left
+                new() {End = Vector2.Zero,               Ini = new Vector2 (Size.X,0),     Owner = this, ActiveSegment = true}, // Up
             };
         }
 
@@ -72,10 +78,10 @@ namespace Arkanoid_02
         {
             return new Segment[]
             {
-                    new() {end = C+ new Vector2(0,20),                      ini = B + new Vector2(0,-20),                       owner = this, ActiveSegment = true}, // Right
-                    new() {end = D+new Vector2 (-20,0)/* + new Vector2(0,200)*/, ini = C+ new Vector2(20,0)/*+ new Vector2(0,200)*/,  owner = this, ActiveSegment = true}, // Down
-                    new() {end = A+new Vector2(0,-20),                      ini = D + new Vector2(0, +20),                       owner = this, ActiveSegment = true}, // Left
-                    new() {end = B + new Vector2(+20,0),                      ini = A + new Vector2(-20,0),                       owner = this, ActiveSegment = true}, // Up
+                new() {End = C + new Vector2 ( 0,20),                            Ini = B + new Vector2 (0,-20),                         Owner = this, ActiveSegment = true}, // Right
+                new() {End = D + new Vector2 (-20,0),/* + new Vector2(0,200), */  Ini = C + new Vector2 (20, 0),/*+ new Vector2(0,200), */Owner = this, ActiveSegment = true}, // Down
+                new() {End = A + new Vector2 ( 0,-20),                           Ini = D + new Vector2 (0,+20),                         Owner = this, ActiveSegment = true}, // Left
+                new() {End = B + new Vector2 (+20,0),                            Ini = A + new Vector2 (-20,0),                         Owner = this, ActiveSegment = true}, // Up
             };
         }
     }

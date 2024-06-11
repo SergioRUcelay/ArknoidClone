@@ -92,8 +92,6 @@ namespace Arkanoid
                 game.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(PrimitiveType.TriangleList,
                     vertices, 0, vertexCount, indices, 0, indexCount / 3);
             }
-
-
             shapeCount = 0;
             vertexCount = 0;
             indexCount = 0;
@@ -134,10 +132,10 @@ namespace Arkanoid
             float botton = y;
             float top = y + height;
 
-            Vector2 a = new Vector2(left, top);
-            Vector2 b = new Vector2(right, top);
-            Vector2 c = new Vector2(right, botton);
-            Vector2 d = new Vector2(left, botton);
+            Vector2 a = new (left, top);
+            Vector2 b = new (right, top);
+            Vector2 c = new (right, botton);
+            Vector2 d = new (left, botton);
 
             indices[indexCount++] = 0 + vertexCount;
             indices[indexCount++] = 1 + vertexCount;

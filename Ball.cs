@@ -38,23 +38,23 @@ namespace Arkanoid_02
             _circle = new Circle(myTexture);
             StarDirection.Normalize();
             Direction = StarDirection;            
-            Speed = 2000;
-            Maxspeed = 1000;
+            Speed = 500;
+            Maxspeed = 800;
             Ini = pos + _circle.Center;  
             Play = false;            
         }
         
         public void Death()
         {
-            visible = false;
+            Active = false;
         }
 
         public void Start()
         {
-            if (!visible)
+            if (!Active)
             {
                 Position = Ini;
-                visible = true;
+                Active = true;
                 Direction = StarDirection;
                 Play = false;
                 Speed = 500f;

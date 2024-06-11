@@ -13,7 +13,7 @@ namespace Arkanoid_02
     {
         public override Action OnHit { get; set; }
         public Vector2 _paddleDirection;
-        public readonly Animations playerAnimation;
+        public readonly Animations PlayerAnimation;
         public Vector2 Ini { get; set; }
 
         private readonly SoundEffect _dead;
@@ -22,10 +22,7 @@ namespace Arkanoid_02
 
         private readonly Song _newlevel;
 
-        public int Life { get; set; }
-        //public bool Rightmove { get; set; }
-        //public bool Leftmove { get; set; }
-        
+        public int Life { get; set; }        
         public readonly float _paddleSpeed;
 
         public Paddle(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
@@ -38,25 +35,23 @@ namespace Arkanoid_02
             Bounce = content.Load<SoundEffect>("Sounds/PlayerBounce");
             ExtraLife = content.Load<SoundEffect>("Sounds/ExtraLife");
             _newlevel = content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
-            playerAnimation = new(content,"Animation/Animation_Player", 2, 1, 0.5f,1);
-            
-            blas_animation = true;
+            PlayerAnimation = new(content,"Animation/Animation_Player", 2, 1, 0.5f,1);
         }
 
         public void Start()
         {
-            if (!visible)
+            if (!Active)
             {
                 Position = Ini;
                 MediaPlayer.Play(_newlevel);
-                visible = true;
+                Active = true;
             }
         }
 
         public void Death()
         {
             Life--;
-            visible = false;
+            Active = false;
             _dead.Play();
             Level.Maintext = true;
             Level.NextLevel = false;
@@ -68,13 +63,12 @@ namespace Arkanoid_02
         {
             return new Segment[]
             {
-                 new() {ini = Position + new Vector2(Size.X, Size.Y),       end = Position + new Vector2(Size.X,Size.Y/4), owner = this, ActiveSegment = true}, // Flat Right
-                 new() {ini = Position + new Vector2(Size.X,Size.Y/4), end = Position + new Vector2(90,0),            owner = this, ActiveSegment = true}, // Inclined Right.
-                 new() {ini = Position + new Vector2(90,0),            end = Position + new Vector2(20,0),            owner = this, ActiveSegment = true}, // Up.
-                 new() {ini = Position + new Vector2(20,0),            end = Position + new Vector2 (0,Size.Y/4),     owner = this, ActiveSegment = true}, // Inclined Left.
-                 new() {ini = Position + new Vector2(0,Size.Y/4),      end = Position + new Vector2 (0,Size.Y),  owner = this, ActiveSegment = true}, // Flat Left.
+                 new() {Ini = new Vector2(Size.X, Size.Y),  End = new Vector2(Size.X,Size.Y/4), Owner = this, ActiveSegment = true}, // Flat Right
+                 new() {Ini = new Vector2(Size.X,Size.Y/4), End = new Vector2(90,0),            Owner = this, ActiveSegment = true}, // Inclined Right.
+                 new() {Ini = new Vector2(90,0),            End = new Vector2(20,0),            Owner = this, ActiveSegment = true}, // Up.
+                 new() {Ini = new Vector2(20,0),            End = new Vector2 (0,Size.Y/4),     Owner = this, ActiveSegment = true}, // Inclined Left.
+                 new() {Ini = new Vector2(0,Size.Y/4),      End = new Vector2 (0,Size.Y),       Owner = this, ActiveSegment = true}, // Flat Left.
             };
         }
-
     }
 }

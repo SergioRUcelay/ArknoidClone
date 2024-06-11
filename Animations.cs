@@ -1,41 +1,44 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
 namespace Arkanoid_02
 {
-    public class OldAnimations
+    public class Animations
     {
+        public readonly List<Rectangle> _frames = new();
+        public readonly Texture2D aniTexture;
 
-        public static Dictionary<int, OldAnimations> bricks_animations;
-        private readonly List<Rectangle> _frames = new();
-        private readonly Texture2D aniTexture;
+        public int currentFrame = 0;
+        public readonly int totalFrames;
+        public readonly double frameTime;
+        public double currenTime = 0;
         
-        private int currentFrame;
-        private readonly int totalFrames;
-        private readonly double frameTime;
-        private double currenTime;
+        public bool AnimaActive;
 
-        private bool active;
-
-        public OldAnimations(Texture2D text, int totalframes, int frameX, int frameY, double timeF, int row=1)
+        public Animations(ContentManager content, string texture, int frameX, int frameY, double timeF, int row = 1)
         {
-            active = true;
-            aniTexture = text;
-            totalFrames = totalframes;
+            aniTexture = content.Load<Texture2D>(texture);
+            totalFrames = frameX;
             frameTime = timeF;
             var frameWidth = aniTexture.Width / frameX;
             var frameHeight = aniTexture.Height / frameY;
 
-            for( int i = 0; i < totalFrames; i++)
+            for (int i = 0; i < totalFrames; i++)
             {
-                _frames.Add(new (frameWidth * i, frameHeight * (row - 1), frameWidth, frameHeight));
+                _frames.Add(new(frameWidth * i, frameHeight * (row - 1), frameWidth, frameHeight));
             }
         }
 
-        public void Start() => active = true;
+        public void Start()
+        {
+            AnimaActive = true;
+            currentFrame = 0;
+            currenTime = 0;
+        }
 
-        public void Stop() => active= false;
+        public void Stop() => AnimaActive = false;
 
         public void Reset()
         {
@@ -45,21 +48,44 @@ namespace Arkanoid_02
 
         public void Update(GameTime gametime)
         {
-            if (!active) return;
-                        
+            if (!AnimaActive) return;
+
             currenTime += gametime.ElapsedGameTime.TotalSeconds;
             if (currenTime >= frameTime)
             {
                 currenTime = 0;
-                currentFrame = (currentFrame + 1) % totalFrames;                
+                currentFrame = (currentFrame + 1) % totalFrames;
             }
 
+            if (currentFrame >= totalFrames - 1)
+                Stop();            
         }
 
-        public void Draw(SpriteBatch sprite,Vector2 pos)
+        public void UpdateLoop(GameTime gametime)
         {
-            sprite.Draw(aniTexture,pos,_frames[currentFrame],Color.White);
+            if (!AnimaActive) return;
+
+            currenTime += gametime.ElapsedGameTime.TotalSeconds;
+            if (currenTime >= frameTime)
+            {
+                currenTime = 0;
+                currentFrame = (currentFrame + 1) % totalFrames;
+            }
         }
-       
+
+        public void Draw(SpriteBatch sprite, Vector2 pos)
+        {
+            if (!AnimaActive) return;
+
+            sprite.Draw(aniTexture, pos, _frames[currentFrame], Color.White);
+        }
+
+        public void Draw(SpriteBatch sprite, Rectangle rect)
+        {
+            if (!AnimaActive) return;
+
+            sprite.Draw(aniTexture, rect, _frames[currentFrame], Color.White);
+        }
     }
+  
 }   

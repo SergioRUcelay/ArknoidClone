@@ -1,22 +1,20 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Threading.Tasks;
 
 namespace Arkanoid_02
 {
     public static class Timer
     {
-        private readonly static float Timeleft;
-        private static float ActualTime;
-        
-        public static void CountDown(GameTime gametime, int CountDown)
+        static double TimeCountE;
+       
+        public static void CountDown(GameTime gametime, float time, Action cast)
         {
-                ActualTime = (int)gametime.TotalGameTime.TotalSeconds;
-                //int Timeleft = CountDown - ActualTime;
+            TimeCountE += gametime.ElapsedGameTime.TotalSeconds;
 
-           if (ActualTime >= Timeleft)
+            if (time <= TimeCountE)
             {
-                //return Action;
+                TimeCountE = 0;
+                cast();
             }
         }
     }
