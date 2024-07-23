@@ -57,6 +57,55 @@ namespace Arkanoid_02
             return (minDistance, collider);
         }
 
+        public static Collision CollideWithWorld(List<Segment> segments, Vector2 direction, Vector2 position, float radius)
+        {
+            Collision col = new();
+
+            foreach (Segment _segment in segments)
+            {
+                //  Cheking active segment
+                if (_segment.ActiveSegment == false)
+                    continue;
+
+                // Evaluate if the normal and direction have the same value
+                if (Vector2.Dot(direction, _segment.Normal) > 0 )
+                    continue;
+
+                Collision newCollition = CollideDiskSegment(position, radius, _segment);
+
+                if (newCollition.depth > col.depth)
+                    col = newCollition;
+            }
+            return col;
+
+        }
+        public static Vector2 NearestPointOnSegment(Vector2 p, Segment seg)
+        {
+            var tangent = (seg.End - seg.Ini);
+
+            if (Vector2.Dot((p - seg.Ini), tangent) <= 0) return seg.Ini;
+            if (Vector2.Dot((p - seg.End), tangent) >= 0) return seg.End;
+
+            tangent.Normalize();
+            var relativePos = p - seg.Ini;
+            return seg.Ini + tangent * Vector2.Dot(tangent, relativePos);
+        }
+
+        public static Collision CollideDiskSegment(Vector2 center, float radius, Segment seg)
+        {
+            var delta = center - NearestPointOnSegment(center, seg);
+
+            if (delta.LengthSquared() > radius * radius) { return new Collision(); }
+
+            var distance = delta.Length();
+            return new()
+            {
+                Normal = delta / distance,
+                depth = radius - distance,
+                seg = seg
+            };
+        }
+
         /// <summary> Calculate the distance projection through the direction vector to the "line". </summary>
         /// <param name="point">The position of the object</param>
         /// <param name="direction">The direction through the object move</param>

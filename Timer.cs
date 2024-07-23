@@ -5,7 +5,7 @@ namespace Arkanoid_02
 {
     public static class Timer
     {
-        static double TimeCountE;
+        private static double TimeCountE;
        
         public static void CountDown(GameTime gametime, float time, Action cast)
         {
@@ -17,5 +17,6 @@ namespace Arkanoid_02
                 cast();
             }
         }
+
     }
 }

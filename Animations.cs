@@ -63,7 +63,8 @@ namespace Arkanoid_02
 
         public void UpdateLoop(GameTime gametime)
         {
-            if (!AnimaActive) return;
+            if (!AnimaActive) 
+                return;
 
             currenTime += gametime.ElapsedGameTime.TotalSeconds;
             if (currenTime >= frameTime)

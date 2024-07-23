@@ -46,14 +46,21 @@ namespace Arkanoid_02
             var EnemySegmentPosition = new Vector2(EnemyAnimation.aniTexture.Width / EnemyAnimation.totalFrames / 2, 0);
             return new Segment[]
             {
-                new() {End = EnemySegmentPosition+new Vector2(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,EnemyAnimation.aniTexture.Height),
-                        Ini = EnemySegmentPosition+new Vector2(-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),EnemyAnimation.aniTexture.Height),  Owner = this, ActiveSegment = true},
+                new() {End = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,          EnemyAnimation.aniTexture.Height),
+                       Ini = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),       EnemyAnimation.aniTexture.Height),
+                    Owner = this, ActiveSegment = true},
 
-                new() {End = EnemySegmentPosition+new Vector2(-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),EnemyAnimation.aniTexture.Height),
-                        Ini = EnemySegmentPosition,                                                                                                                Owner = this, ActiveSegment = true},
+                new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),       EnemyAnimation.aniTexture.Height),
+                       Ini = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3),0),
+                    Owner = this, ActiveSegment = true},
 
-                new() {End = EnemySegmentPosition,
-                        Ini = EnemySegmentPosition+new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,EnemyAnimation.aniTexture.Height),    Owner = this, ActiveSegment = true},
+                new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3),0),
+                       Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3,0),
+                    Owner = this, ActiveSegment = true},
+
+                new() {End = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3,0),
+                       Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,          EnemyAnimation.aniTexture.Height),
+                    Owner = this, ActiveSegment = true},
             };
         }
               

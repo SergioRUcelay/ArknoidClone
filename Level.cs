@@ -11,17 +11,17 @@ using System.Threading;
 
 namespace Arkanoid_02
 {
-    public class Level : IDisposable
+    public class Level
     {
         public ContentManager content;
         public GameTime gametime;
         public Action EnemyCreate { get; set; }
-        public Action DoorCast { get; set; }
+        public Action DoorManage { get; set; }
 
         private Ball _ball;
         private Paddle _paddle;
         private Brick _screen;
-        public  Door doorLeft;
+        private Door _doorLeft;
         private Door _doorRight;
 
         private readonly SpriteBatch SpriteBatch;
@@ -70,6 +70,7 @@ namespace Arkanoid_02
 
         public Level(IServiceProvider serviceProvider, GameTime gametime, SpriteBatch spriteBatch)
         {
+            Random = new Random();
             content = new ContentManager(serviceProvider, "Content");
             SpriteBatch = spriteBatch;
             this.gametime = gametime;
@@ -84,14 +85,11 @@ namespace Arkanoid_02
             _ballWallBounce = content.Load<SoundEffect>("Sounds/WallBounce");
             ElapsedTime = 10f;
             EnemyNumber = 0;
-            EnemyCreate = () => CreateEnemy();
 
             A_Limit = new Vector2(25, 100);
             B_Limit = new Vector2(800, 100);
             C_Limit = new Vector2(800, 875);
             D_Limit = new Vector2(25, 875);
-
-            Random = new Random();
         }
 
         private void Iniciate()
@@ -111,14 +109,16 @@ namespace Arkanoid_02
             // GameObjets creation:
             _paddle = new Paddle(content, SpriteBatch, "Items/Player", new Vector2(365, 810));
             _paddle.OnHit = () => _paddle.Bounce.Play();
-            _segments.AddRange(_paddle.GetSegments());
-            //_paddle.PlayerAnimation.AnimationManager[1].Start();
+            _segments.AddRange(_paddle.GetSegments());            
             _ball = new Ball(content, SpriteBatch, "Items/ball", new Vector2(380, 840));
-            doorLeft = new Door(content, SpriteBatch, "Items/door", new Vector2(182, 75));
-            _doors[0] =  doorLeft;
+            _doorLeft = new Door(content, SpriteBatch, "Items/door", new Vector2(182, 75));
+            _doors[0] =  _doorLeft;
             _doorRight = new Door(content, SpriteBatch, "Items/door", new Vector2(573, 75));
             _doors[1] =  _doorRight;
-            
+            DoorManage = () => Doors();
+            //(int EnemyT, int EnemyPos) = CastDoor();
+            //EnemyCreate = () => OutEnemy(EnemyPos);
+
             // Screen`s limits
             _screen = new(Hard.Blue, content, SpriteBatch, "Items/BlueBlock", Vector2.Zero);
             _segments.AddRange(_screen.GetScreenSegment(A_Limit, B_Limit, C_Limit, D_Limit));
@@ -156,24 +156,43 @@ namespace Arkanoid_02
                 _paddle.Can_move = false;
             }
 
-            // Code for control the segment collisions.
-            (float mindistance, Segment collider) = ArkaMath.Collision(_segments, _ball.Direction, _ball._circle.Center);
+            // Old-Code for control the segment collisions with a Ball.
+            //(float mindistance, Segment collider) = ArkaMath.Collision(_segments, _ball.Direction, _ball._circle.Center);
 
-            if (mindistance < _ball.Speed * (float)gametime.ElapsedGameTime.TotalSeconds)
-                Bounces(mindistance, collider, gametime);
+            //if (mindistance < _ball.Speed * (float)gametime.ElapsedGameTime.TotalSeconds)
+            //    Bounces(mindistance, collider);
+            //else
+            //    IncreaseBallSpeedOverTime(gametime);
+            _ball._circle.Center += _ball.Speed * _ball.Direction * (float)gametime.ElapsedGameTime.TotalSeconds;
+            // Code for control the segment collision with a Circle/Ball.
+            var Collide = ArkaMath.CollideWithWorld(_segments, _ball.Direction, _ball._circle.Center, _ball._circle.Radius);
+            if (Collide.depth > 0)
+            {
+                _ball._circle.Center -= _ball.Direction * Collide.depth;// ((_ball.Speed * (float)gametime.ElapsedGameTime.TotalSeconds) - ) ;
+                _ball.Direction = Vector2.Reflect(_ball.Direction, Collide.Normal);
+                Collide.seg.Owner.OnHit();
+            }
             else
+            {
+               
                 IncreaseBallSpeedOverTime(gametime);
+            }
 
             // Manage Enemy.
-            if (_ball.Play == true && EnemyNumber < 5) Timer.CountDown(gametime, 2, EnemyCreate);
+            if (_ball.Play == true && EnemyNumber < 5)
+            {
+                Timer.CountDown(gametime, 2, DoorManage);
+                //Timer.CountDown(gametime, 4, EnemyCreate);
+            }
+
             foreach (var enemies in _enemies)
             {
                 enemies.Animation();
                 if (enemies.Position.Y >= D_Limit.Y + 200) EnemyNumber--;
             }
 
-                // Manage MaxPoints
-                if (Points >= MaxPoints) MaxPoints = Points;
+            // Manage MaxPoints
+            if (Points >= MaxPoints) MaxPoints = Points;
             Extralife();
 
             // Manage AchiveLvel.
@@ -253,8 +272,7 @@ namespace Arkanoid_02
             }
 
             if (Level_Time_lifeleft > 2.6)
-            {
-                _paddle.PlayerAnimation.Start();
+            {   
                 _paddle.PlayerAnimation.UpdateLoop(gameTime);
                 _paddle.PlayerAnimation.Draw(SpriteBatch, _paddle.Position);
                 _ball.Draw(_ball._circle.Center);
@@ -312,7 +330,7 @@ namespace Arkanoid_02
             if (_levelNumber <= _maxlevelNumber)
             {
                 string brickLayoutPath = string.Format(@"D:\cODEX\LaysCarpGameStudios\Arkanoid\Content\Levels\BlockLevel0" + _levelNumber + ".txt");//, _levelNumber);
-                using StreamReader blockLine = new StreamReader(brickLayoutPath);
+                using StreamReader blockLine = new (brickLayoutPath);
                 int i = 0;
                 while (blockLine.Peek() > -1)
                 {
@@ -420,15 +438,28 @@ namespace Arkanoid_02
         public void ReleaseBall()
         {
             var Pushkey = Keyboard.GetState();
-            if (_ball.Can_move && Pushkey.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Space)) _ball.Play = true;
+            if (_ball.Can_move && Pushkey.IsKeyDown(Keys.Space)) _ball.Play = true;
         }
 
-        public void CreateEnemy()
+        public (int, int) Doors()
+        {            
+            var EnemyT = Random.Next((int)EnemyType.LAST - 1);
+            var EnemyPos = Random.Next(0, 2);            
+            Door.CastDoor(_doors[EnemyPos]);            
+            int Opendor = EnemyPos;
+            return (EnemyT, EnemyPos);
+            //Enemy _enemy = new((EnemyType)EnemyT, content, SpriteBatch, EnemyPos);
+            //_enemies.Add(_enemy);
+            //_enemy.OnHit = () => DestroyEnemy(_enemy);
+            //_enemy.Animation = _enemy.EnemyCircleMovement;
+            //_segments.AddRange(_enemy.GetSegments());
+            //EnemyNumber++;
+        }
+
+        public void OutEnemy(int EnemyPos)
         {
-            var text = Random.Next((int)EnemyType.LAST - 1);
-            var pos = Random.Next(0, 2);
-            Door.DoorCast(_doors[pos]);
-            Enemy _enemy = new((EnemyType)text, content, SpriteBatch, pos);
+            var EnemyT = Random.Next((int)EnemyType.LAST - 1);
+            Enemy _enemy = new((EnemyType)EnemyT, content, SpriteBatch, EnemyPos);
             _enemies.Add(_enemy);
             _enemy.OnHit = () => DestroyEnemy(_enemy);
             _enemy.Animation = _enemy.EnemyCircleMovement;
@@ -438,8 +469,6 @@ namespace Arkanoid_02
 
         public void AchievedLevel()
         {
-            Dispose();
-
             _levelNumber++;
             if (_levelNumber > 4)
                 _levelNumber = 1;
@@ -469,7 +498,6 @@ namespace Arkanoid_02
 
         public void GameOver()
         {
-            Dispose();
             _brickList.Clear();
             _segments.Clear();
             _enemies.Clear();
@@ -559,9 +587,6 @@ namespace Arkanoid_02
             if (_ball.Play)
             {
                 TimeCount += (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-                _ball._circle.Center += _ball.Speed * _ball.Direction * (float)gameTime.ElapsedGameTime.TotalSeconds;
-
                 if (TimeCount > ElapsedTime && _ball.Speed < _ball.Maxspeed)
                 {
                     _ball.Speed += 30f;
@@ -570,19 +595,19 @@ namespace Arkanoid_02
             }
         }
 
-        public void Bounces(float minDistance, Segment segment, GameTime gameTime)
+        public void Bounces(float minDistance, Segment segment)
         {
             _ball._circle.Center += minDistance * _ball.Direction;
             _ball.Direction = Vector2.Reflect(_ball.Direction, segment.Normal);
             segment.Owner.OnHit();
         }
 
-        public void Dispose()
+        public void Bounces(Collision collide)
         {
-            //Dispose(true);
-            GC.SuppressFinalize(this);
-        } /*=> content.Unload();*/
-
+            //_ball._circle.Center += minDistance * _ball.Direction;
+            _ball.Direction = Vector2.Reflect(_ball.Direction, collide.Normal);
+            collide.seg.Owner.OnHit();
+        }
 
         //public bool TheCollider()
         //{

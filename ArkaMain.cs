@@ -90,13 +90,13 @@ namespace Arkanoid_02
                 level.Draw(gameTime);
             _spriteBatch.End();
 
-            //shapes.Begin();
-            //foreach (var seg in Level._segments)
-            //{
-            //    if (seg.ActiveSegment)
-            //        shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
-            //}
-            //shapes.End();
+            shapes.Begin();
+            foreach (var seg in Level._segments)
+            {
+                if (seg.ActiveSegment)
+                    shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
+            }
+            shapes.End();
 
             base.Draw(gameTime);
         }       

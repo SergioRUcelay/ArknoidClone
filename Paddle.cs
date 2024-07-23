@@ -36,6 +36,7 @@ namespace Arkanoid_02
             ExtraLife = content.Load<SoundEffect>("Sounds/ExtraLife");
             _newlevel = content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
             PlayerAnimation = new(content,"Animation/Animation_Player", 2, 1, 0.5f,1);
+            PlayerAnimation.AnimaActive = true;
         }
 
         public void Start()
