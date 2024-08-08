@@ -20,8 +20,6 @@ namespace Arkanoid_02
         public SoundEffect Bounce;
         public SoundEffect ExtraLife;
 
-        private readonly Song _newlevel;
-
         public int Life { get; set; }        
         public readonly float _paddleSpeed;
 
@@ -29,13 +27,12 @@ namespace Arkanoid_02
         {
             _paddleDirection = new Vector2(400f, 0);
             Ini = pos;
-            Life = 3;
             _paddleSpeed = 2f;
-            _dead = content.Load<SoundEffect>("Sounds/PlayerDead");
-            Bounce = content.Load<SoundEffect>("Sounds/PlayerBounce");
-            ExtraLife = content.Load<SoundEffect>("Sounds/ExtraLife");
-            _newlevel = content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
-            PlayerAnimation = new(content,"Animation/Animation_Player", 2, 1, 0.5f,1);
+            _dead           = content.Load<SoundEffect>("Sounds/PlayerDead");
+            Bounce          = content.Load<SoundEffect>("Sounds/PlayerBounce");
+            ExtraLife       = content.Load<SoundEffect>("Sounds/ExtraLife");
+            PlayerAnimation = new (content,"Animation/Animation_Player", 2, 1, 0.5f,1);
+
             PlayerAnimation.AnimaActive = true;
         }
 
@@ -44,7 +41,6 @@ namespace Arkanoid_02
             if (!Active)
             {
                 Position = Ini;
-                MediaPlayer.Play(_newlevel);
                 Active = true;
             }
         }
@@ -54,10 +50,7 @@ namespace Arkanoid_02
             Life--;
             Active = false;
             _dead.Play();
-            Level.Maintext = true;
-            Level.NextLevel = false;
-           // Level.Time_lifeleft = 0;
-            Thread.Sleep(1500);
+            //Thread.Sleep(1500);
         }
 
         public Segment[] GetSegments()

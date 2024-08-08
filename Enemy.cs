@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Arkanoid_02
 {
@@ -10,6 +11,7 @@ namespace Arkanoid_02
     public class Enemy : SpriteArk
     {
         public override Action OnHit { get; set; }
+        private readonly SpriteBatch spriteBatch;
         public Action Animation { get; set; }
         
         public Vector2 _direction;
@@ -26,7 +28,7 @@ namespace Arkanoid_02
         public Enemy(EnemyType clas, ContentManager content, SpriteBatch spriteBatch, int pos) : base(content, spriteBatch, pos)
         {
             Position = (pos == 0)? new Vector2(115, 40) : new Vector2(505, 40);
-            
+            this.spriteBatch = spriteBatch;
             Enemytexture = "Animation/"+clas.ToString()+"_enemy";
             
             _direction = new Vector2(0.05f,0.5f);
@@ -51,14 +53,14 @@ namespace Arkanoid_02
                     Owner = this, ActiveSegment = true},
 
                 new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),       EnemyAnimation.aniTexture.Height),
-                       Ini = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3),0),
+                       Ini = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),0),
                     Owner = this, ActiveSegment = true},
 
-                new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3),0),
-                       Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3,0),
+                new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),0),
+                       Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,0),
                     Owner = this, ActiveSegment = true},
 
-                new() {End = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/3,0),
+                new() {End = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,0),
                        Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,          EnemyAnimation.aniTexture.Height),
                     Owner = this, ActiveSegment = true},
             };
@@ -71,6 +73,24 @@ namespace Arkanoid_02
             Position = new Vector2(x, y);
             degrees++;
             SpinCenter += _direction;
+        }
+
+        public void Draw(GameTime gameTime, List<Enemy> _enemies)
+        {
+            // Enemies
+            foreach (var enemies in _enemies)
+            {
+                if (enemies != null && enemies.Active)
+                {
+                    enemies.EnemyAnimation.UpdateLoop(gameTime);
+                    enemies.EnemyAnimation.Draw(spriteBatch, enemies.Position);
+                }
+                if (enemies != null && enemies.Blast.AnimaActive)
+                {
+                    enemies.Blast.Update(gameTime);
+                    enemies.Blast.Draw(spriteBatch, enemies.Position);
+                }
+            }
         }
     }
 }

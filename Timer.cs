@@ -3,20 +3,28 @@ using System;
 
 namespace Arkanoid_02
 {
-    public static class Timer
+    public class Timer
     {
-        private static double TimeCountE;
-       
-        public static void CountDown(GameTime gametime, float time, Action cast)
-        {
-            TimeCountE += gametime.ElapsedGameTime.TotalSeconds;
+        public event Action OnMatured;
+        private readonly float delay;
+        private double TimeCountE;
 
-            if (time <= TimeCountE)
-            {
-                TimeCountE = 0;
-                cast();
-            }
+        public Timer(float timeDelay)
+        {
+            delay = timeDelay;
+        }
+        public void Reset(GameTime gametime)
+        {
+            TimeCountE = gametime.TotalGameTime.TotalSeconds;
         }
 
+        public void CountDown(GameTime gametime)
+        {
+            if ((TimeCountE + delay) <= gametime.TotalGameTime.TotalSeconds)
+            {
+                Reset(gametime);
+                OnMatured?.Invoke();
+            }
+        }
     }
 }

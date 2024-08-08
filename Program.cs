@@ -1,3 +1,3 @@
 ﻿
-using var game = new Arkanoid_02.ArkaMain();
+using var game = new Arkanoid_02.ArkaGame();
 game.Run();

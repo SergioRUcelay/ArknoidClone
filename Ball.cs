@@ -17,8 +17,7 @@ namespace Arkanoid_02
         public float Speed;        
         public float Maxspeed;
         public float Incrementspeed;
-
-        public bool Play {  get; set; }  // Flag to keep the ball attached to the paddle.
+        public bool Attach;
 
         public struct Circle
         {
@@ -40,8 +39,9 @@ namespace Arkanoid_02
             Direction = StarDirection;            
             Speed = 500;
             Maxspeed = 800;
-            Ini = pos + _circle.Center;  
-            Play = false;            
+            Ini = pos + _circle.Center;            
+            Attach = true;
+            Active = true;
         }
         
         public void Death()
@@ -49,14 +49,14 @@ namespace Arkanoid_02
             Active = false;
         }
 
-        public void Start()
+        public void StartUpAndReposition()
         {
             if (!Active)
             {
                 Position = Ini;
                 Active = true;
                 Direction = StarDirection;
-                Play = false;
+                Attach = true;
                 Speed = 500f;
             }
         }

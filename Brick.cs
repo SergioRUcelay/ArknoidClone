@@ -78,8 +78,8 @@ namespace Arkanoid_02
         {
             return new Segment[]
             {
-                new() {End = C + new Vector2 ( 20,0),                            Ini = B + new Vector2 (20,0),                         Owner = this, ActiveSegment = true}, // Right
-                new() {End = D + new Vector2 (-20,0),/* + new Vector2(0,200), */  Ini = C + new Vector2 (20, 0),/*+ new Vector2(0,200), */Owner = this, ActiveSegment = true}, // Down
+                new() {End = C + new Vector2 ( 20,0),                            Ini = B + new Vector2 (20,0),                          Owner = this, ActiveSegment = true}, // Right
+                new() {End = D + new Vector2 (-20,0) + new Vector2(0,200),       Ini = C + new Vector2 (20, 0)  + new Vector2(0,200),   Owner = this, ActiveSegment = true}, // Down
                 new() {End = A + new Vector2 ( 0,-20),                           Ini = D + new Vector2 (0,+20),                         Owner = this, ActiveSegment = true}, // Left
                 new() {End = B + new Vector2 (+20,0),                            Ini = A + new Vector2 (-20,0),                         Owner = this, ActiveSegment = true}, // Up
             };

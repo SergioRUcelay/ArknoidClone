@@ -12,7 +12,6 @@ namespace Arkanoid_02
         public Animations _openDoor;
         public Animations _closeDoor;
         public Vector2 DoorPosition;
-        public bool Open;
 
         public Door(ContentManager content, SpriteBatch sprite, string  texture, Vector2 pos) : base (content, sprite, texture, pos)
         {   
@@ -20,16 +19,7 @@ namespace Arkanoid_02
             DoorPosition = pos;
             _openDoor = new Animations(content, "Animation/Open_door", 5, 1, 0.12f);
             _closeDoor = new Animations(content, "Animation/Close_door", 5, 1, 0.12f);
-            Active = true;
-            Open = false;
-        }
-
-        public static void CastDoor(Door door)
-        {
-            if (!door.Open)
-                DoorOpenCast(door);
-            else
-                DoorCloseCast(door);
+            Active = true;            
         }
 
         public static void DoorOpenCast(Door door)
@@ -38,18 +28,15 @@ namespace Arkanoid_02
             {
                 door._openDoor.Start();
                 door.Active = false;
-                door.Open = true;
             }
         }
 
         public static void DoorCloseCast(Door door)
         {
-            if (!door.Active && door.Open)
-            {
-                
+            if (!door.Active)
+            {                
                 door._closeDoor.Start();
-                //door.Active = true;
-                door.Open = false;
+                door.Active = true;
             }
         }
     }
