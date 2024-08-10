@@ -114,11 +114,11 @@ namespace Arkanoid_02
         /// <returns>The distance between point and the segment</returns>
         public static float DistancePointLineAlongDir(Vector2 point, Vector2 direction, Vector2 vectorPoint1, Vector2 vectorPoint2)
         {
-            var dir = Vector2.Normalize(vectorPoint2 - vectorPoint1);                    //line vector
+            var dir = Vector2.Normalize(vectorPoint2 - vectorPoint1);         //line vector
             var pointOnLine = NearestPointOnLine(vectorPoint1, dir, point);   //vector from point to line
             var alingment = Vector2.Dot((pointOnLine - point), direction);
 
-            //Amo a ve... first catches whether the direction is towards of away from the line, the second catches wether we ARE in the line
+            // First catches whether the direction is towards of away from the line, the second catches wether we ARE in the line
             if (alingment > 0)// || (pointOnLine - point).Length() <= 0.000000001)
                 return (pointOnLine - point).Length() / Vector2.Dot(direction, Vector2.Normalize(pointOnLine - point)); //There is a finite distance from that point to the line along the vector
             else

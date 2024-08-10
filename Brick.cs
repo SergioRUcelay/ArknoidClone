@@ -18,8 +18,6 @@ namespace Arkanoid_02
         public readonly Hard hardness;
 
         public bool destructible;
-        public bool blas_animation;
-        public bool glint_animation;
 
         public SoundEffect BrickBounce;
         public SoundEffect MetalBounce;
@@ -58,8 +56,8 @@ namespace Arkanoid_02
                     Glint = new Animations(content, "Animation/Animation_PinkBlock_7", 7, 1, 0.05f);
                     break;
             }
-            BrickBounce = content.Load<SoundEffect>("Sounds/HitBrickBounce");
-            MetalBounce = content.Load<SoundEffect>("Sounds/MetalBounce");
+            BrickBounce   = content.Load<SoundEffect>("Sounds/HitBrickBounce");
+            MetalBounce   = content.Load<SoundEffect>("Sounds/MetalBounce");
             DestroyBounce = content.Load<SoundEffect>("Sounds/DestroyBrickBounce");
         }
 

@@ -1,13 +1,14 @@
 ﻿using Arkanoid;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Media;
+using Keys = Microsoft.Xna.Framework.Input.Keys;
+using System.Threading;
 
 namespace Arkanoid_02
 {
@@ -17,20 +18,15 @@ namespace Arkanoid_02
         private GameState gameState = GameState.MENU;
         private readonly GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
-        private readonly Timer EnemyTimer     = new(5f);
-        private readonly Timer mainText       = new (2.5f);
-        private readonly Timer GameOverScreen = new (3f);
-        private readonly Timer NextLevelText  = new (2.5f);
-        private SpriteFont _numberPointFont;
-        private SpriteFont _lifeLeft;
-        private Texture2D _backGround;
-        private Texture2D _scoreZone;
+        private readonly Timer Enemy_timer          = new(5f);
+        private readonly Timer LevelText_timer      = new (2.2f);
+        private readonly Timer GameOverScreen_timer = new (3f);
+        private readonly Timer LifeText_timer       = new (2.8f);
+        private SpriteFont _numberPointFont, _lifeLeft;        
         private Texture2D _arkaLogo;
 
         // Vectors describing the boundaries of the screen.
         private Vector2 B_Limit, A_Limit, C_Limit, D_Limit;
-
-        private Song NewLevelSound;
 
         // Game Objets
         private Level level;
@@ -40,23 +36,23 @@ namespace Arkanoid_02
         private Ball ball;
         private Paddle paddle;
 
-        private readonly SoundEffect _ballWallBounce;
+        private Song NewLevelSound;
+        private SoundEffect _ballWallBounce;
         private readonly Door[] _doors = new Door[2];
-        public static readonly List<Segment> _segments = new();
         private static readonly List<Enemy> _enemies = new();
+        public static readonly List<Segment> _segments = new();
         private Random Random { get; set; }
-
         public static  int Points { get; set; }
         private int MaxPoints { get; set; }
         private int ExtraLifePoints { get; set; }
+        private int EnemyNumber { get; set; }
 
-        public int EnemyNumber { get; set; }
+        private bool ShowLife;
+        private bool ShowLevel;
 
         // This two variable manages time for speed increment of ball in "IncreaseBallSpeedOverTime" method.
         private float timeCount;
         private float ElapsedTime = 10f;
-
-        public int ActualTime;
 
         public ArkaGame()
         {
@@ -64,11 +60,8 @@ namespace Arkanoid_02
             Content.RootDirectory = "Content";
             IsMouseVisible = false;
 
-            graphics.PreferredBackBufferWidth = 843;
+            graphics.PreferredBackBufferWidth  = 843;
             graphics.PreferredBackBufferHeight = 900;
-
-            _ballWallBounce = Content.Load<SoundEffect>("Sounds/WallBounce");
-
             A_Limit = new Vector2(25, 100);
             B_Limit = new Vector2(800, 100);
             C_Limit = new Vector2(800, 875);
@@ -78,6 +71,9 @@ namespace Arkanoid_02
             MaxPoints       = 50000;
             ExtraLifePoints = 6000;
             EnemyNumber     = 0;
+
+            ShowLife = false;
+            ShowLevel = true;
         }
 
         protected override void Initialize()
@@ -92,7 +88,7 @@ namespace Arkanoid_02
             _doors[0]       = new Door(Content, spriteBatch, "Items/door", new Vector2(182, 75));
             _doors[1]       = new Door(Content, spriteBatch, "Items/door", new Vector2(573, 75));
 
-            EnemyTimer.OnMatured += async () =>
+            Enemy_timer.OnMatured += async () =>
             {
                 var e = new Random().Next(0, 2);
                 Door.DoorOpenCast(_doors[e]);
@@ -101,30 +97,37 @@ namespace Arkanoid_02
                 await Task.Delay(400);
                 Door.DoorCloseCast(_doors[e]);
             };
+
+            LevelText_timer.OnMatured += () =>
+            {               
+                paddle.Start();
+                gameState = GameState.PLAY;
+                _segments.AddRange(paddle.GetSegments());
+                paddle.OnHit = () => paddle.Bounce.Play();
+                _segments.AddRange(screeLimit.GetScreenSegment(A_Limit, B_Limit, C_Limit, D_Limit));
+                screeLimit.OnHit = () => _ballWallBounce.Play();
+            };
+
+            LifeText_timer.OnMatured += () =>
+            {
+                gameState = GameState.PLAY;
+                paddle.Active = true;
+            };
             base.Initialize();
         }
 
         protected override void LoadContent()
-        {
-            
+        {            
+            _arkaLogo           = Content.Load<Texture2D>("Items/ArkaLogo");
             _numberPointFont    = Content.Load<SpriteFont>("Fonts/Points");
             _lifeLeft           = Content.Load<SpriteFont>("Fonts/Points");
             NewLevelSound       = Content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
-            _arkaLogo           = Content.Load<Texture2D>("Items/ArkaLogo");
-
-            // GameObjets Content:            
-            _segments.AddRange(paddle.GetSegments());
-            paddle.OnHit = () => paddle.Bounce.Play();
-            
-            // Screen`s limits           
-            _segments.AddRange(screeLimit.GetScreenSegment(A_Limit, B_Limit, C_Limit, D_Limit));
-            screeLimit.OnHit = () => _ballWallBounce.Play();
+            _ballWallBounce     = Content.Load<SoundEffect>("Sounds/WallBounce");
         }
 
         protected override void Update(GameTime gameTime)
         {
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
 
             switch(gameState)
             {
@@ -139,15 +142,17 @@ namespace Arkanoid_02
                     }
                 break;
 
-                case GameState.PREPLAY:
-                    mainText.CountDown(gameTime);
-                    if (level.NextLevel) NextLevelText.CountDown(gameTime);
-                    break;
+                case GameState.PREPLAY:                    
+                    if(ShowLevel)
+                        LevelText_timer.CountDown(gameTime);
+                    if (ShowLife)                    
+                        LifeText_timer.CountDown(gameTime);                    
+                break;
 
                 case GameState.PLAY:
                     //Manage paddle.
                     if (paddle.Active)
-                        PaddleMovement(gameTime);
+                          PaddleMovement(gameTime);
 
                     //Manage ball.
                     ball.StartUpAndReposition();
@@ -159,18 +164,15 @@ namespace Arkanoid_02
                     Extralife();
                     AchievedLevel(gameTime);
                     GameOver();
-                    GameOverScreen.Reset(gameTime);
+                    GameOverScreen_timer.Reset(gameTime);
                     break;
 
                 case GameState.GAMEOVER:
                     screen.ScreenBlackGameOver(gameTime);
-                    GameOverScreen.CountDown(gameTime);
-                    GameOverScreen.OnMatured += () => gameState = GameState.MENU;
+                    GameOverScreen_timer.CountDown(gameTime);
+                    GameOverScreen_timer.OnMatured += () => gameState = GameState.MENU;
                 break;
             }
-             
-         
-
             //    // Manage Enemy.
             //    if (ball.Play == true && level.EnemyNumber < 3)
             //        EnemyTimer.CountDown(gameTime);
@@ -183,21 +185,6 @@ namespace Arkanoid_02
             //        if (enemies.Position.Y >= D_Limit.Y + 10)
             //            level.FallEnemy(enemies);
             //    }
-
-            
-            //}
-
-            //// Manage AchiveLvel.
-            //if (_play && level.NumberBricks <= 0)
-            //{
-            //    Thread.Sleep(500);
-            //    AchievedLevel();
-            //    EnemyTimer.Reset(gameTime);
-
-            //    level.Iniciate();
-            //    mainText = new(2.5f);
-            //    mainText.OnMatured += () => MainText();
-            //}
 
             base.Update(gameTime);       
         }
@@ -241,23 +228,41 @@ namespace Arkanoid_02
                         door._closeDoor.Update(gameTime);
                     }
                 }
+
                 if (gameState == GameState.PREPLAY)
-                    MainText();
-
-
+                {
+                    if (ShowLevel)                    
+                        LevelText();
+                    if (ShowLife)
+                        LifeLeftText();
+                }
             }
+
             if (gameState == GameState.PLAY)
             {
                 paddle.PlayerAnimation.UpdateLoop(gameTime);
                 paddle.PlayerAnimation.Draw(spriteBatch, paddle.Position);
                 ball.Draw(ball._circle.Center);
-                ball.Active = true;
-                paddle.Can_move = true;
-                
+
+                // Enemies
+                foreach (var enemies in _enemies)
+                {
+                    if (enemies != null && enemies.Active)
+                    {
+                        enemies.EnemyAnimation.UpdateLoop(gameTime);
+                        enemies.EnemyAnimation.Draw(spriteBatch, enemies.Position);
+                    }
+                    if (enemies != null && enemies.Blast.AnimaActive)
+                    {
+                        enemies.Blast.Update(gameTime);
+                        enemies.Blast.Draw(spriteBatch, enemies.Position);
+                    }
+                }
             }
 
             spriteBatch.End();
 
+            // ----------------------------- This code displays the segments on the screen. ----------------------------
             //shapes.Begin();
             //if (gameState == GameState.PLAY)
             //{
@@ -272,19 +277,14 @@ namespace Arkanoid_02
             base.Draw(gameTime);
         }
 
-        void GoToPreplay(GameTime gameTime)
+        private void GoToPreplay(GameTime gameTime)
         {
-            mainText.Reset(gameTime);
+            LevelText_timer.Reset(gameTime);
             MediaPlayer.Play(NewLevelSound);
-            mainText.OnMatured += () =>
-            {
-                paddle.Start();
-                gameState = GameState.PLAY;
-            };
             screen.playOn = true;
         }
 
-        private void MainText()
+        private void LifeLeftText()
         {
             spriteBatch.Draw(_arkaLogo, new Vector2(320, 620), Color.White);
             spriteBatch.DrawString(_lifeLeft, paddle.Life + "  LIVES  LEFT", new Vector2(290, 700), Color.White);
@@ -310,7 +310,6 @@ namespace Arkanoid_02
                 movement = -1;
             if (paddle.Can_move && keyState.IsKeyDown(Keys.Right) && paddle.Position.X + paddle.Size.X < 810f)
                 movement = 1;
-
             paddle.Position.X += movement * paddle._paddleDirection.X * paddle._paddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
         }
 
@@ -330,14 +329,13 @@ namespace Arkanoid_02
 
         // Code for control the segment collision with a Circle/Ball.
         private void CollisionAndMotionController(GameTime gameTime)
-        {
-            
+        {            
             ball._circle.Center += ball.Speed * ball.Direction * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var collide = ArkaMath.CollideWithWorld(_segments, ball.Direction, ball._circle.Center, ball._circle.Radius);
             if (collide.depth > 0)
             {
-                ball._circle.Center -= ball.Direction * collide.depth;// ((_ball.Speed * (float)gametime.ElapsedGameTime.TotalSeconds) - ) ;
+                ball._circle.Center -= ball.Direction * collide.depth;
                 ball.Direction = Vector2.Reflect(ball.Direction, collide.Normal);
                 collide.seg.Owner.OnHit();
             }
@@ -354,7 +352,6 @@ namespace Arkanoid_02
             if (ball.Active)
             {
                 timeCount += (float)gameTime.ElapsedGameTime.TotalSeconds;
-
                 if (timeCount > ElapsedTime && ball.Speed < ball.Maxspeed)
                 {
                     ball.Speed += 30f;
@@ -368,18 +365,21 @@ namespace Arkanoid_02
         /// </summary>
         private void ControlsLowerLimitBallPosition(GameTime gameTime)
         {
-            if (ball._circle.Center.Y >= D_Limit.Y + 150)
+            if (ball._circle.Center.Y >= D_Limit.Y + 100)
             {
                 ball.Death();
                 paddle.Death();
                 ball.Active = false;
-                paddle.Can_move = false;
-                //level.Maintext = true;
-                //level.NextLevel = false;
-                mainText.Reset(gameTime);
+                ShowLife    = true;
+                ShowLevel   = false;
+                LifeText_timer.Reset(gameTime);
                 GoToPreplay(gameTime);
                 gameState = GameState.PREPLAY;
             }
+        }
+        private void Enemies()
+        {
+
         }
 
         public void OutEnemy(int enemyPos)
@@ -439,16 +439,18 @@ namespace Arkanoid_02
                 _enemies.Clear();
                 level.NumberBricks = 0;
                 EnemyNumber = 0;
-                //level.Maintext = false;
-                //level.NextLevel = true;
+                ShowLife = false;
+                ShowLevel = true;
                 ball.Active = false;
-                paddle.Can_move = false;
-                NextLevelText.Reset(gameTime);
-                EnemyTimer.Reset(gameTime);
+                LevelText_timer.Reset(gameTime);
+                Enemy_timer.Reset(gameTime);
+                Thread.Sleep(1000);
+                GoToPreplay(gameTime);
                 level.Iniciate();
                 gameState = GameState.PREPLAY;
             }
         }
+
         public void GameOver()
         {
             if ( paddle.Life <= 0)
@@ -456,10 +458,9 @@ namespace Arkanoid_02
                 level._brickList.Clear();
                 _segments.Clear();
                 _enemies.Clear();
-                //level.Maintext = true;
-                //level.NextLevel = false;
+                ShowLevel = true;
+                ShowLife = false;
                 ball.Active = false;
-                paddle.Can_move = false;
                 level._levelNumber = 1;
                 EnemyNumber = 0;
                 Points = 0;
@@ -468,5 +469,20 @@ namespace Arkanoid_02
                 gameState = GameState.GAMEOVER;
             }
         }
+
+        //public void bounces(float mindistance, segment segment)
+        //{
+        //    _ball._circle.center += mindistance * _ball.direction;
+        //    _ball.direction = vector2.reflect(_ball.direction, segment.normal);
+        //    segment.owner.onhit();
+        //}
+
+        //public void bounces(collision collide)
+        //{
+        //    //_ball._circle.center += mindistance * _ball.direction;
+        //    _ball.direction = vector2.reflect(_ball.direction, collide.normal);
+        //    collide.seg.owner.onhit();
+        //}
     }
+
 }

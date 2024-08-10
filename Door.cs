@@ -15,10 +15,10 @@ namespace Arkanoid_02
 
         public Door(ContentManager content, SpriteBatch sprite, string  texture, Vector2 pos) : base (content, sprite, texture, pos)
         {   
-            tex = content.Load<Texture2D>(texture);
+            tex        = content.Load<Texture2D>(texture);
+            _openDoor  = new (content, "Animation/Open_door", 5, 1, 0.12f);
+            _closeDoor = new (content, "Animation/Close_door", 5, 1, 0.12f);
             DoorPosition = pos;
-            _openDoor = new Animations(content, "Animation/Open_door", 5, 1, 0.12f);
-            _closeDoor = new Animations(content, "Animation/Close_door", 5, 1, 0.12f);
             Active = true;            
         }
 

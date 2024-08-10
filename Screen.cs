@@ -66,7 +66,6 @@ namespace Arkanoid_02
         public void ScreenBlackGameOver(GameTime gameTime)
         {
             timerForDraw_P += gameTime.ElapsedGameTime.TotalSeconds;
-
             GameOverSong    = content.Load<Song>("Sounds/05_-_Arkanoid_-_NES_-_Game_Over");
             BlackGameOver   = content.Load<Texture2D>("Screens/Black");
             Draw(BlackGameOver, WelcomePosition);

@@ -9,14 +9,14 @@ namespace Arkanoid_02
     public class Ball : SpriteArk
     {
         public override Action OnHit { get; set; }
-        public Vector2 Ini { get; set; } // This is the initial position.
+        private Vector2 Ini { get; set; } // This is the initial position.
         private Vector2 StarDirection = new (10f, -52f);
         public Vector2 Direction; // The Vector Direction of the moviment.
         public Circle _circle;        
 
         public float Speed;        
         public float Maxspeed;
-        public float Incrementspeed;
+        //public float Incrementspeed;
         public bool Attach;
 
         public struct Circle
