@@ -58,7 +58,7 @@ namespace Arkanoid_02
             }
 
             if (currentFrame >= totalFrames - 1)
-                Stop();            
+               Stop();              
         }
 
         public void UpdateLoop(GameTime gametime)

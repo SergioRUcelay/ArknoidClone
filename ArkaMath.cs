@@ -56,7 +56,7 @@ namespace Arkanoid_02
             }
             return (minDistance, collider);
         }
-
+       
         public static Collision CollideWithWorld(List<Segment> segments, Vector2 direction, Vector2 position, float radius)
         {
             Collision col = new();

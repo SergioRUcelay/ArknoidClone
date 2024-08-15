@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 
 namespace Arkanoid_02
 {
@@ -14,9 +13,10 @@ namespace Arkanoid_02
         private readonly SpriteBatch spriteBatch;
         public Action Animation { get; set; }
         
-        public Vector2 _direction;
+        public Vector2 EnemyDirection;
         public Vector2 UperLimit;
         public Vector2 SpinCenter;
+        public Vector2 EnemyCenter;
         private readonly string Enemytexture;
         private uint degrees;
 
@@ -31,7 +31,7 @@ namespace Arkanoid_02
             this.spriteBatch = spriteBatch;
             Enemytexture = "Animation/"+clas.ToString()+"_enemy";
             
-            _direction = new Vector2(0.05f,0.5f);
+            EnemyDirection = new Vector2(0.05f,0.5f);
             UperLimit = new Vector2(25,150);
             RadiusWidth = 60f;
             degrees = 0;
@@ -40,6 +40,7 @@ namespace Arkanoid_02
             Dead = content.Load<SoundEffect>("Sounds/EnemyDestroy");
 
             SpinCenter = new(Position.X + EnemyAnimation.aniTexture.Width / EnemyAnimation.totalFrames / 2, Position.Y + EnemyAnimation.aniTexture.Height / 2);
+            EnemyCenter = new(EnemyAnimation.aniTexture.Width / EnemyAnimation.totalFrames / 2, EnemyAnimation.aniTexture.Height / 2);
             EnemyAnimation.AnimaActive = true;
         }
 
@@ -65,32 +66,14 @@ namespace Arkanoid_02
                     Owner = this, ActiveSegment = true},
             };
         }
-              
+        
         public void EnemyCircleMovement()
         {   
             float x = SpinCenter.X + RadiusWidth * (float)Math.Cos(degrees * (Math.PI / 180));
             float y = SpinCenter.Y + RadiusWidth * (float)Math.Sin(degrees * (Math.PI / 180));
             Position = new Vector2(x, y);
             degrees++;
-            SpinCenter += _direction;
-        }
-
-        public void Draw(GameTime gameTime, List<Enemy> _enemies)
-        {
-            // Enemies
-            foreach (var enemies in _enemies)
-            {
-                if (enemies != null && enemies.Active)
-                {
-                    enemies.EnemyAnimation.UpdateLoop(gameTime);
-                    enemies.EnemyAnimation.Draw(spriteBatch, enemies.Position);
-                }
-                if (enemies != null && enemies.Blast.AnimaActive)
-                {
-                    enemies.Blast.Update(gameTime);
-                    enemies.Blast.Draw(spriteBatch, enemies.Position);
-                }
-            }
+            SpinCenter += EnemyDirection;
         }
     }
 }
