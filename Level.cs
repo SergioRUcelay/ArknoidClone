@@ -17,23 +17,17 @@ namespace Arkanoid_02
 
         public readonly List<Brick> _brickList = new();
         private readonly string[][] _currentLevel = new string[30][];
-
-        public int _levelNumber;        
-        private const int _maxlevelNumber = 4;
-        public int NumberBricks { set; get; }
        
         public Level(IServiceProvider serviceProvider, SpriteBatch spriteBatch, ContentManager content)
         {
             _content = content;
             _spriteBatch = spriteBatch;
-            _levelNumber = 1;
-            NumberBricks = 0;
         }
 
-        public void Iniciate()
+        public void Iniciate(int _level)
         {
-            LoadBackground();
-            BrickLayout(_content);
+            LoadBackground(_level);
+            BrickLayout(_level);
         }
 
         public void Draw(GameTime gameTime)
@@ -68,37 +62,31 @@ namespace Arkanoid_02
             }
         }
 
-        private void LoadBackground()
+        private void LoadBackground(int _levelNumber)
         {
             _scoreZone = _content.Load<Texture2D>("Items/ScoresZone");
-            if (_levelNumber <= _maxlevelNumber)
-            {
-                string backGroundPath = string.Format("Levels/Level0{0}", _levelNumber);
-                _backGround = _content.Load<Texture2D>(backGroundPath);
-            }
-            else { throw new NotSupportedException("Level number exceeds content."); }
+             string backGroundPath = string.Format("Levels/Level0{0}", _levelNumber);
+             _backGround = _content.Load<Texture2D>(backGroundPath);            
         }
 
-        private void BrickLayout(ContentManager content)
+        private void BrickLayout(int _levelNumber)
         {
+            _brickList.Clear();
+
             Vector2 iniposition = new(0, 0);
             Vector2 position = new(0, 0);
             Vector2 bricksizeX = new(61, 0); // new (_brick.Size.X,0);
             Vector2 bricksizeY = new(0, 30); // new (0, _brick.Size.Y);
 
-            if (_levelNumber <= _maxlevelNumber)
+            string brickLayoutPath = string.Format(@"D:\cODEX\LaysCarpGameStudios\Arkanoid\Content\Levels\BlockLevel0" + _levelNumber + ".txt");//, _levelNumber);
+            using StreamReader blockLine = new (brickLayoutPath);
+            int e = 0;
+            while (blockLine.Peek() > -1)
             {
-                string brickLayoutPath = string.Format(@"D:\cODEX\LaysCarpGameStudios\Arkanoid\Content\Levels\BlockLevel0" + _levelNumber + ".txt");//, _levelNumber);
-                using StreamReader blockLine = new (brickLayoutPath);
-                int i = 0;
-                while (blockLine.Peek() > -1)
-                {
-                    _currentLevel[i] = new string[] { blockLine.ReadLine() };
-                    i++;
-                }
+                _currentLevel[e] = new string[] { blockLine.ReadLine() };
+                e++;
             }
-            else { throw new NotSupportedException("Level number exceeds content."); }
-
+            
             // Line ( Y )
             for (int i = 0; i < _currentLevel.Length; i++)
             {
@@ -130,7 +118,6 @@ namespace Arkanoid_02
                                 ArkaGame._segments.AddRange(_brick.GetSegments());
                                 _brick.OnHit = () => DestroyBrick(_brick);
                                 position += bricksizeX;
-                                NumberBricks++;
                                 break;
 
                             case '2':
@@ -139,7 +126,6 @@ namespace Arkanoid_02
                                 ArkaGame._segments.AddRange(_brick.GetSegments());
                                 _brick.OnHit = () => DestroyBrick(_brick);
                                 position += bricksizeX;
-                                NumberBricks++;
                                 break;
 
                             case '3':
@@ -148,7 +134,6 @@ namespace Arkanoid_02
                                 ArkaGame._segments.AddRange(_brick.GetSegments());
                                 _brick.OnHit = () => DestroyBrick(_brick);
                                 position += bricksizeX;
-                                NumberBricks++;
                                 break;
 
                             case '4':
@@ -157,7 +142,6 @@ namespace Arkanoid_02
                                 ArkaGame._segments.AddRange(_brick.GetSegments());
                                 _brick.OnHit = () => DestroyBrick(_brick);
                                 position += bricksizeX;
-                                NumberBricks++;
                                 break;
 
                             case '5':
@@ -200,7 +184,6 @@ namespace Arkanoid_02
                     brick.Active = false;
                     brick.Blast.Start();
                     brick.DestroyBounce.Play();
-                    NumberBricks--;
 
                     switch (brick.hardness)
                     {

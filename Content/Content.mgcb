@@ -319,6 +319,18 @@
 /processorParam:TextureFormat=Color
 /build:Items/YellowBlock.png
 
+#begin Levels/Level00.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Levels/Level00.png
+
 #begin Levels/Level01.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -354,18 +366,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Levels/Level03.png
-
-#begin Levels/Level04.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Levels/Level04.png
 
 #begin Screens/Black.png
 /importer:TextureImporter
