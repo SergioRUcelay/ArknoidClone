@@ -11,13 +11,12 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 using System.Threading;
 using System.Diagnostics;
 using Stateless;
-using System.Reflection.Metadata;
 
 namespace Arkanoid_02
 {
-    enum GameState { START, MENU, LEVELSTART, PREPLAY, PLAY, PLAYERDIES, LEVELEND, PLUSPLAY, GAMEOVER };
-    enum Trigger { ToMenu, ToLevelStart, ToPreplay, ToPlay, ToPlayerDies, ToLevelEnd, ToPlusPlay, ToGameOver };
-    
+    enum GameState { START, MENU, LEVELSTART, PREPLAY, PLAY, PLAYERDIES, LEVELEND, GAMEOVER };
+    enum Trigger { ToMenu, ToLevelStart, ToPreplay, ToPlay, ToPlayerDies, ToLevelEnd, ToGameOver };
+
     public class ArkaGame : Game
     {
         private readonly StateMachine<GameState, Trigger> Fsm = new (GameState.START);
@@ -50,7 +49,7 @@ namespace Arkanoid_02
         private static readonly List<Enemy> _enemies = new();
         public static readonly List<Segment> _segments = new();
         public static int Points { get; set; }
-        private int MaxPoints { get; set; }
+        private int MaxPoints { get; set; }    
         private int ExtraLifePoints { get; set; }
 
         private bool ShowLife;
@@ -67,17 +66,18 @@ namespace Arkanoid_02
                 .Permit(Trigger.ToMenu, GameState.MENU);
 
             Fsm.Configure(GameState.MENU)
-                .Permit(Trigger.ToPreplay, GameState.PREPLAY)
+                .Permit(Trigger.ToLevelStart, GameState.LEVELSTART)
+                .OnEntry(() => MediaPlayer.Play(WelcomeSong))
                 .OnExit(() =>
                 {
                     Points = 0;
                     paddle.Life = 3;
-                    LevelStart(0);
-                })
-                .OnEntry(()=> MediaPlayer.Play(WelcomeSong)); 
+                    currentLevel = 0;
+                });
 
             Fsm.Configure(GameState.LEVELSTART)
-                .Permit(Trigger.ToPreplay, GameState.PREPLAY);
+                .Permit(Trigger.ToPreplay, GameState.PREPLAY)
+                .OnEntry(() => LevelStart(currentLevel));
 
             Fsm.Configure(GameState.PREPLAY)
                 .Permit(Trigger.ToPlay, GameState.PLAY)
@@ -85,16 +85,17 @@ namespace Arkanoid_02
                 {
                     LevelText_timer.Reset(gameTime);
                     MediaPlayer.Play(NewLevelSound);
-                });
+                })
+                .OnExit(() => ShowLife = false);
 
             Fsm.Configure(GameState.PLAY)
-                .Permit(Trigger.ToPreplay, GameState.PREPLAY)
-                .Permit(Trigger.ToGameOver, GameState.GAMEOVER)
+                .Permit(Trigger.ToLevelEnd, GameState.LEVELEND)
+                .Permit(Trigger.ToPlayerDies, GameState.PLAYERDIES)
+
                 .OnEntry(() =>
                 {
                     ball.StartUpAndReposition();
-                    paddle.Active = true;
-                    //ball.Active = true;
+                    paddle.Start();
                     _enemies.Clear();
                 })
                 .OnExit(() =>
@@ -103,9 +104,22 @@ namespace Arkanoid_02
                     ball.Active = false;
                 });
 
+            Fsm.Configure(GameState.PLAYERDIES)
+                .Permit(Trigger.ToPreplay, GameState.PREPLAY)
+                .Permit(Trigger.ToGameOver, GameState.GAMEOVER)
+                .OnEntry(()=>
+                {                  
+                    paddle.Death();
+                    EnemyScreenErase();
+                    LifeText_timer.Reset(gameTime);
+                });
+
+            Fsm.Configure(GameState.LEVELEND)
+                .Permit(Trigger.ToLevelStart, GameState.LEVELSTART);
+
             Fsm.Configure(GameState.GAMEOVER)
                 .Permit(Trigger.ToMenu, GameState.MENU)
-                .OnEntry(() => 
+                .OnEntry(() =>
                 {
                     GameOverScreen_timer.Reset(gameTime);
                     MediaPlayer.Play(GameOverSong);
@@ -115,19 +129,15 @@ namespace Arkanoid_02
             Content.RootDirectory = "Content";
             IsMouseVisible = false;
 
-            graphics.PreferredBackBufferWidth  = 843;
+            graphics.PreferredBackBufferWidth = 843;
             graphics.PreferredBackBufferHeight = 900;
-            A_Limit = new Vector2 (25, 100);
-            B_Limit = new Vector2 (800,100);
-            C_Limit = new Vector2 (800,875);
-            D_Limit = new Vector2 (25, 875);
+            A_Limit = new Vector2(25, 100);
+            B_Limit = new Vector2(800, 100);
+            C_Limit = new Vector2(800, 875);
+            D_Limit = new Vector2(25, 875);
 
-            Points          = 0;
-            MaxPoints       = 50000;
+            MaxPoints = 50000;
             ExtraLifePoints = 12000;
-
-            ShowLife  = false;
-            ShowLevel = true;
         }
 
         protected override void Initialize()
@@ -154,8 +164,7 @@ namespace Arkanoid_02
 
             LevelText_timer.OnMatured += () =>
             {
-                ShowLevel = false;
-                paddle.Start();                
+                ShowLevel = false;                
                 _segments.AddRange(paddle.GetSegments());
                 paddle.OnHit = () => paddle.Bounce.Play();
                 _segments.AddRange(screeLimit.GetScreenSegment(A_Limit, B_Limit, C_Limit, D_Limit));
@@ -187,6 +196,7 @@ namespace Arkanoid_02
 
         protected override void Update(GameTime gameTime)
         {
+            //We store a copy for the internal use of the FSM as the timers do require it
             this.gameTime = gameTime;
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
@@ -196,8 +206,8 @@ namespace Arkanoid_02
                 case GameState.MENU:
                     screen.WelcomeScreen(gameTime);
                     if (Keyboard.GetState().IsKeyDown(Keys.P))
-                        Fsm.Fire(Trigger.ToPreplay);
-                        break;
+                        Fsm.Fire(Trigger.ToLevelStart);
+                break;
 
                 case GameState.PREPLAY:
                     if (ShowLevel)
@@ -211,12 +221,25 @@ namespace Arkanoid_02
                     WeArePlaying();
                 break;
 
+                case GameState.PLAYERDIES:
+                    if (paddle.Life > 0)
+                    {
+                        Fsm.Fire(Trigger.ToPreplay);
+                        ShowLife = true;
+                    }
+                    else
+                        Fsm.Fire(Trigger.ToGameOver);           
+                break;
+
+                case GameState.LEVELEND:
+                    currentLevel = ++currentLevel % 4;
+                    Fsm.Fire(Trigger.ToLevelStart);
+                break;
+
                 case GameState.GAMEOVER:
-                    ShowLevel = true;
-                    ShowLife = false;
                     screen.ScreenBlackGameOver(gameTime);
                     GameOverScreen_timer.CountDown(gameTime);
-                    break;
+                break;
             }
 
             base.Update(gameTime);       
@@ -227,7 +250,6 @@ namespace Arkanoid_02
             spriteBatch.Begin();
             
             if (Fsm.State == GameState.PLAY || Fsm.State == GameState.PREPLAY)
-            //if(showBackground)
             {
                 level.Draw(gameTime);
                 // Score
@@ -239,7 +261,7 @@ namespace Arkanoid_02
                 spriteBatch.DrawString(_numberPointFont, maxpoints, new Vector2(400, 20), Color.WhiteSmoke);
 
                 // Round
-                string l_Number = currentLevel.ToString();
+                string l_Number = (currentLevel+1).ToString();
                 spriteBatch.DrawString(_numberPointFont, l_Number, new Vector2(635, 34), Color.WhiteSmoke);
 
                 // Lives
@@ -249,7 +271,9 @@ namespace Arkanoid_02
                 // Doors
                 foreach (var door in _doors)
                 {
-                    if (door.Active) door.Draw(gameTime);
+                    if (door.Active)
+                        door.Draw(gameTime);
+
                     if (door._openDoor.AnimaActive)
                     {
                         door._openDoor.Draw(spriteBatch, door.DoorPosition);
@@ -263,57 +287,55 @@ namespace Arkanoid_02
                     }
                 }
                 if (ShowLevel)
-                    LevelText();
+                    DrawLevelNumberText();
                 if (ShowLife)
-                    LifeLeftText();
-
+                    DrawLifeLeftText();
             }
 
             if (Fsm.State == GameState.PLAY)
-            //if (PlayerControlled)
             {
                 paddle.PlayerAnimation.UpdateLoop(gameTime);
                 paddle.PlayerAnimation.Draw(spriteBatch, paddle.Position);
                 ball.Draw(ball._circle.Center);
 
-
-                //if (drawEmenies)
+                // Enemies
+                foreach (var enemy in _enemies)
                 {
-                    // Enemies
-                    foreach (var enemies in _enemies)
+                    Debug.Assert(enemy != null);
+                    if (enemy.Active)
                     {
-                        if (enemies != null && enemies.Active)
-                        {
-                            enemies.EnemyAnimation.UpdateLoop(gameTime);
-                            enemies.EnemyAnimation.Draw(spriteBatch, enemies.Position);
-                        }
-                        if (enemies != null && enemies.Blast.AnimaActive)
-                        {
-                            enemies.Blast.Update(gameTime);
-                            enemies.Blast.Draw(spriteBatch, enemies.Position);
-                        }
+                        enemy.EnemyAnimation.UpdateLoop(gameTime);
+                        enemy.EnemyAnimation.Draw(spriteBatch, enemy.Position);
                     }
+                    else if (enemy.Blast.AnimaActive)
+                    {
+                        enemy.Blast.Update(gameTime);
+                        enemy.Blast.Draw(spriteBatch, enemy.Position);
+                    }
+                    //else the enemy was deactivated as it exited through the bottom
                 }
             }
 
             spriteBatch.End();
 
             //----------------------------------------- This code displays the segments on the screen. ----------------------------
-            shapes.Begin();
-            if (Fsm.State == GameState.PLAY)
-            {
-                foreach (var seg in _segments)
-                {
-                    if (seg.ActiveSegment)
-                        shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
-                }
-            }
-            shapes.End();
+            //shapes.Begin();
+            //if (Fsm.State == GameState.PLAY)
+            //{
+            //    foreach (var seg in _segments)
+            //    {
+            //        if (seg.ActiveSegment)
+            //            shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
+            //    }
+            //}
+            //shapes.End();
 
             base.Draw(gameTime);
         }
   
-
+        /// <summary>
+        /// Calls to the diferents methodes that makes we can play.
+        /// </summary>
         private void WeArePlaying()
         {
             //Manage paddle.
@@ -321,7 +343,6 @@ namespace Arkanoid_02
             PaddleMovement(gameTime);
 
             //Manage ball.
-         //   ball.StartUpAndReposition();
             ReleaseBall();
             ControlsLowerLimitBallPosition(gameTime);
 
@@ -330,25 +351,31 @@ namespace Arkanoid_02
             Extralife();
             if (!level._brickList.Exists((brick) => brick.Active))
             {
-                LevelCompleted();
-                Fsm.Fire(Trigger.ToPreplay);
+                Thread.Sleep(1000);
+                Fsm.Fire(Trigger.ToLevelEnd);
             }
-
+            
             //Manage Enemies.
-            Enemies(gameTime);
+            UpdateEnemies(gameTime);
         }
 
-        private void LifeLeftText()
+        /// <summary>
+        /// Draw the number of lives left at the begenning of the level.
+        /// </summary>
+        private void DrawLifeLeftText()
         {
             spriteBatch.Draw(_arkaLogo, new Vector2(320, 620), Color.White);
             spriteBatch.DrawString(_lifeLeft, paddle.Life + "  LIVES  LEFT", new Vector2(290, 700), Color.White);
             spriteBatch.DrawString(_lifeLeft, "READY!!", new Vector2(345, 750), Color.White);
         }
 
-        private void LevelText()
+        /// <summary>
+        /// Draw the number of level that are we playing.
+        /// </summary>
+        private void DrawLevelNumberText()
         {
             spriteBatch.Draw(_arkaLogo, new Vector2(320, 620), Color.White);
-            spriteBatch.DrawString(_lifeLeft, "ROUND   " + currentLevel, new Vector2(345, 700), Color.White);
+            spriteBatch.DrawString(_lifeLeft, "ROUND   " + (currentLevel + 1), new Vector2(345, 700), Color.White);
             spriteBatch.DrawString(_lifeLeft, "READY!!", new Vector2(345, 750), Color.White);
         }
 
@@ -378,7 +405,8 @@ namespace Arkanoid_02
                 ball._circle.Center.X = paddle.Position.X + 70;
             }
             var pushkey = Keyboard.GetState();
-            if (ball.Active && pushkey.IsKeyDown(Keys.Space)) ball.Attach = false;
+            if (ball.Active && pushkey.IsKeyDown(Keys.Space))
+                ball.Attach = false;
         }
 
         /// <summary>
@@ -422,37 +450,29 @@ namespace Arkanoid_02
         /// </summary>
         private void ControlsLowerLimitBallPosition(GameTime gameTime)
         {
-            if (ball._circle.Center.Y >= D_Limit.Y + 100)
-            {
-                ball.Death();
-                paddle.Death();
-                EnemyScreenErase();
-                paddle.Start();
-                ShowLife = true;
-                LifeText_timer.Reset(gameTime);
-                if (paddle.Life > 0)
-                   Fsm.Fire(Trigger.ToPreplay);
-                else
-                   Fsm.Fire(Trigger.ToGameOver);
-            }
+            if (ball._circle.Center.Y >= D_Limit.Y + 100)                         
+                Fsm.Fire(Trigger.ToPlayerDies);            
         }
 
         /// <summary>
         ///  Manage Enemy.
         /// </summary>
         /// <param name="gameTime"></param>
-        private void Enemies(GameTime gameTime)
-        {           
-            if (ball.Active == true && ball.Attach == false && _enemies.Count < 5)
+        private void UpdateEnemies(GameTime gameTime)
+        {   
+            if (/*ball.Active == true && ball.Attach == false && */ _enemies.Count < 5)
                 Enemy_timer.CountDown(gameTime);
             else
                 Enemy_timer.Reset(gameTime);
 
-            foreach (var enemies in _enemies)
+            _enemies.RemoveAll(e => !e.Active && !e.Blast.AnimaActive);
+
+            foreach (var enemy in _enemies)
             {
-                enemies.Animation();
-                if (enemies.Position.Y >= D_Limit.Y + 20)
-                    RemoveEnemy(enemies);
+                Debug.Assert(enemy.Active || enemy.Blast.AnimaActive);
+                enemy.Animation();
+                if (enemy.Position.Y >= D_Limit.Y + 20)
+                    DeactivateEnemy(enemy);
             }
         }
 
@@ -476,21 +496,20 @@ namespace Arkanoid_02
         /// <param name="enemy"></param>
         public void ExplodeEnemy(Enemy enemy)
         {
-            if (enemy.Active)
-            {
-                RemoveEnemy(enemy);
-                enemy.Blast.Start();
-                enemy.Dead.Play();
-            }
+            Debug.Assert(enemy.Active);
+            DeactivateEnemy(enemy);
+            enemy.Blast.Start();
+            enemy.Dead.Play();
         }
+
         /// <summary>
         /// When the enemy crosses the bottom of the screen. Clear and disable the enemies and their segments from a list. And subtracts them from the EnemyNumber value.
         /// </summary>
         /// <param name="enemy"></param>
-        public void RemoveEnemy(Enemy enemy)
+        public void DeactivateEnemy(Enemy enemy)
         {
             foreach (var segment in _segments)
-                    segment.ActiveSegment &= segment.Owner != enemy;
+                segment.ActiveSegment &= segment.Owner != enemy;
             enemy.Active = false;
         }
 
@@ -514,14 +533,7 @@ namespace Arkanoid_02
             ShowLevel = true;
             _segments.Clear();
             level.Iniciate(_level);
-        }
-        
-        public void LevelCompleted()
-        {
-            currentLevel = ++currentLevel % 4;
-            LevelStart(currentLevel);
-            ShowLife = false;
-            Thread.Sleep(1000);
+            Fsm.Fire(Trigger.ToPreplay);
         }
     }
 }

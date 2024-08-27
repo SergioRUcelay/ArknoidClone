@@ -13,7 +13,6 @@ namespace Arkanoid_02
         public Vector2 anima_position;
         protected ContentManager content;
         public bool Active;
-        public bool Can_move;
 
         public abstract Action OnHit { get; set; }
         public Vector2 Size =>  new (myTexture.Width, myTexture.Height);
@@ -28,14 +27,12 @@ namespace Arkanoid_02
             myTexture = content.Load<Texture2D>(texture);
             Position = pos;
             Active = true;
-            Can_move = false;
         }
         public SpriteArk(ContentManager content, SpriteBatch spriteBatch,int pos)
         {
             this.content = content;
             _spritebatch = spriteBatch;
             Active = true;
-            Can_move = false;
         }
         public virtual void Draw(GameTime gameTime)
         {

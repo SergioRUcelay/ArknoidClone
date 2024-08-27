@@ -11,12 +11,11 @@ namespace Arkanoid_02
         public override Action OnHit { get; set; }
         private Vector2 Ini { get; set; } // This is the initial position.
         private Vector2 StarDirection = new (10f, -52f);
-        public Vector2 Direction; // The Vector Direction of the moviment.
+        public Vector2 Direction; // The Vector Direction of the movement.
         public Circle _circle;        
 
         public float Speed;        
         public float Maxspeed;
-        //public float Incrementspeed;
         public bool Attach;
 
         public struct Circle
@@ -41,24 +40,17 @@ namespace Arkanoid_02
             Maxspeed = 800;
             Ini = pos + _circle.Center;            
             Attach = true;
-            Active = true;
-        }
-        
-        public void Death()
-        {
             Active = false;
         }
 
         public void StartUpAndReposition()
         {
-            if (!Active)
-            {
-                Position = Ini;
-                Active = true;
-                Direction = StarDirection;
-                Attach = true;
-                Speed = 500f;
-            }
+            Debug.Assert(!Active);
+            Position = Ini;
+            Active = true;
+            Direction = StarDirection;
+            Attach = true;
+            Speed = 500f;
         }
 
         public void Draw(Vector2 pos)

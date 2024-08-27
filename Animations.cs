@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
+using System;
 
 namespace Arkanoid_02
 {
     public class Animations
     {
+        private Action AnimationEnd;
         public readonly List<Rectangle> _frames = new();
         public readonly Texture2D aniTexture;
 
@@ -31,14 +33,17 @@ namespace Arkanoid_02
             }
         }
 
-        public void Start()
+        public void Start() => Start(() => { });
+        
+        public void Start(Action peich)
         {
+            AnimationEnd += () => { AnimaActive = false; peich(); };
             AnimaActive  = true;
             currentFrame = 0;
             currenTime   = 0;
         }
 
-        public void Stop() => AnimaActive = false;
+        public void Stop() => AnimationEnd?.Invoke();
 
         public void Reset()
         {

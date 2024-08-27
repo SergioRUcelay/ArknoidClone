@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Arkanoid_02
@@ -18,6 +19,7 @@ namespace Arkanoid_02
         private readonly SoundEffect _dead;
         public SoundEffect Bounce;
         public SoundEffect ExtraLife;
+        public bool Can_move;
 
         public int Life { get; set; }        
         public readonly float _paddleSpeed;
@@ -33,15 +35,14 @@ namespace Arkanoid_02
             _paddleSpeed = 2f;
             Can_move = true;
             PlayerAnimation.AnimaActive = true;
+            Active = false;
         }
 
         public void Start()
         {
-            if (!Active)
-            {
-                Position = Ini;
-                Active = true;
-            }
+            Debug.Assert(!Active);
+            Position = Ini;
+            Active = true;           
         }
 
         public void Death()
