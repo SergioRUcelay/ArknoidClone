@@ -24,6 +24,15 @@
     <Compile Remove="HandlerCollisions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Content\Levels\BlockLevel.txt" />
+    <None Remove="Content\Levels\BlockLevel00.txt" />
+    <None Remove="Content\Levels\BlockLevel01.txt" />
+    <None Remove="Content\Levels\BlockLevel02.txt" />
+    <None Remove="Content\Levels\BlockLevel03.txt" />
+    <None Remove="Diagrama1.dia" />
+    <None Remove="Diagrama1.dia.autosave" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.1.303" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
     <PackageReference Include="Stateless" Version="5.16.0" />

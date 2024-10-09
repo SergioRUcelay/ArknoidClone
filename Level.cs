@@ -3,25 +3,22 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Arkanoid_02
 {
     public class Level
     {
-        private readonly ContentManager _content;
+        private readonly ContentManager content;
 
-        private readonly SpriteBatch _spriteBatch;
-        private Texture2D _backGround;
-        private Texture2D _scoreZone;
+        private readonly SpriteBatch spriteBatch;
+        private Texture2D backGround, scoreZone;
 
-        public readonly List<Brick> _brickList = new();
-        private readonly string[][] _currentLevel = new string[30][];
+        public readonly List<Brick> brickList = new();
        
         public Level(IServiceProvider serviceProvider, SpriteBatch spriteBatch, ContentManager content)
         {
-            _content = content;
-            _spriteBatch = spriteBatch;
+            this.content = content;
+            this.spriteBatch = spriteBatch;
         }
 
         public void Iniciate(int _level)
@@ -32,142 +29,117 @@ namespace Arkanoid_02
 
         public void Draw(GameTime gameTime)
         {
-            _spriteBatch.Draw(_backGround, new Vector2(0, 0), Color.White);
-            _spriteBatch.Draw(_scoreZone, new Vector2(0, 0), Color.White);
+            spriteBatch.Draw(backGround, new Vector2(0, 0), Color.White);
+            spriteBatch.Draw(scoreZone, new Vector2(0, 0), Color.White);
 
-            foreach (var brick in _brickList)
+            foreach (var brick in brickList)
             {
                 // Here call a Draw method of the objet.
                 brick.Draw(gameTime);
             }
 
-            foreach (var brick in _brickList)
+            foreach (var brick in brickList)
             {
                 // Here call a Draw method of the animation objet.
-                if (brick.Blast != null && brick.Blast.AnimaActive)
+                if (brick.Blast != null && brick.Blast.IsAnimaActive)
                 {
-                    brick.Blast.Draw(_spriteBatch, brick.R_blast);
+                    brick.Blast.Draw(spriteBatch, brick.R_Blast);
                     brick.Blast.Update(gameTime);
                 }
             }
 
-            foreach (var brick in _brickList)
+            foreach (var brick in brickList)
             {
                 // Here call a Draw method of the animation objet.
-                if (brick.Glint != null && brick.Glint.AnimaActive)
+                if (brick.Glint != null && brick.Glint.IsAnimaActive)
                 {
                     brick.Glint.Update(gameTime);
-                    brick.Glint.Draw(_spriteBatch, brick.R_Collider);
+                    brick.Glint.Draw(spriteBatch, brick.R_Collider);
                 }
             }
         }
 
-        private void LoadBackground(int _levelNumber)
+        private void LoadBackground(int levelNumber)
         {
-            _scoreZone = _content.Load<Texture2D>("Items/ScoresZone");
-             string backGroundPath = string.Format("Levels/Level0{0}", _levelNumber);
-             _backGround = _content.Load<Texture2D>(backGroundPath);            
+            scoreZone = content.Load<Texture2D>("Items/ScoresZone");
+            string backGroundPath = string.Format("Levels/Level0{0}", levelNumber);
+            backGround = content.Load<Texture2D>(backGroundPath);
         }
 
-        private void BrickLayout(int _levelNumber)
+        private void BrickLayout(int levelNumber)
         {
-            _brickList.Clear();
+            brickList.Clear();
+            Vector2 bricksize = new(61, 30);
+            Vector2 position  = new(0 , 0);
 
-            Vector2 iniposition = new(0, 0);
-            Vector2 position = new(0, 0);
-            Vector2 bricksizeX = new(61, 0); // new (_brick.Size.X,0);
-            Vector2 bricksizeY = new(0, 30); // new (0, _brick.Size.Y);
-
-            string brickLayoutPath = string.Format(@"D:\cODEX\LaysCarpGameStudios\Arkanoid\Content\Levels\BlockLevel0" + _levelNumber + ".txt");//, _levelNumber);
-            using StreamReader blockLine = new (brickLayoutPath);
-            int e = 0;
-            while (blockLine.Peek() > -1)
+            //for all lines
+            for (int i = 0; i < Levels.Level.GetLength(1); i++)
             {
-                _currentLevel[e] = new string[] { blockLine.ReadLine() };
-                e++;
-            }
-            
-            // Line ( Y )
-            for (int i = 0; i < _currentLevel.Length; i++)
-            {
-                // Colums ( X )
-                for (int j = 0; j < _currentLevel[i].Length; j++)
+                position.X = 0;
+                //for each character
+                for (int k = 0; k < Levels.Level[0,0].Length; k++)
                 {
-                    // Char of the  X
-                    for (int k = 0; k < _currentLevel[i][j].Length; k++)
+                    switch (Levels.Level[levelNumber, i][k])
                     {
-                        switch (_currentLevel[i][j][k])
-                        {
-                            case ',':
-                            case '.':
-                                position += bricksizeX;
-                                break;
+                        case ',':
+                        case '.':
+                            position.X += bricksize.X;
+                            break;
 
-                            //all the following cases using just one
-                            ///hits:
-                            ///use         case default
-                            ///use a map (string, tuple) (C# Dictionary is equivalent to C++ unordered_map. Furthermore, C# SortedDictionary is equivalent to C++ map.)
-                            ///map(string, (string, int))
-                            ///use tuples
-                            ///profit!
-                            //                              break;
-                            //
-                            case '1':
-                                var _brick = new Brick(Hard.Blue, _content, _spriteBatch, "Items/BlueBlock", position);
-                                _brickList.Add(_brick);
-                                ArkaGame._segments.AddRange(_brick.GetSegments());
-                                _brick.OnHit = () => DestroyBrick(_brick);
-                                position += bricksizeX;
-                                break;
+                        case '1':
+                            var brick = new Brick(Hard.Blue, content, spriteBatch, "Items/BlueBlock", position);
+                            brickList.Add(brick);
+                            ArkaGame.SegmentsList.AddRange(brick.GetSegments());
+                            brick.OnHit = () => DestroyBrick(brick);
+                            position.X += bricksize.X;
+                            break;
 
-                            case '2':
-                                _brick = new Brick(Hard.Yellow, _content, _spriteBatch, "Items/YellowBlock", position);
-                                _brickList.Add(_brick);
-                                ArkaGame._segments.AddRange(_brick.GetSegments());
-                                _brick.OnHit = () => DestroyBrick(_brick);
-                                position += bricksizeX;
-                                break;
+                        case '2':
+                            brick = new Brick(Hard.Yellow, content, spriteBatch, "Items/YellowBlock", position);
+                            brickList.Add(brick);
+                            ArkaGame.SegmentsList.AddRange(brick.GetSegments());
+                            brick.OnHit = () => DestroyBrick(brick);
+                            position.X += bricksize.X;
+                            break;
 
-                            case '3':
-                                _brick = new Brick(Hard.Green, _content, _spriteBatch, "Items/GreenBlock", position);
-                                _brickList.Add(_brick);
-                                ArkaGame._segments.AddRange(_brick.GetSegments());
-                                _brick.OnHit = () => DestroyBrick(_brick);
-                                position += bricksizeX;
-                                break;
+                        case '3':
+                            brick = new Brick(Hard.Green, content, spriteBatch, "Items/GreenBlock", position);
+                            brickList.Add(brick);
+                            ArkaGame.SegmentsList.AddRange(brick.GetSegments());
+                            brick.OnHit = () => DestroyBrick(brick);
+                            position.X += bricksize.X;
+                            break;
 
-                            case '4':
-                                _brick = new Brick(Hard.Pink, _content, _spriteBatch, "Items/PinkBlock", position);
-                                _brickList.Add(_brick);
-                                ArkaGame._segments.AddRange(_brick.GetSegments());
-                                _brick.OnHit = () => DestroyBrick(_brick);
-                                position += bricksizeX;
-                                break;
+                        case '4':
+                            brick = new Brick(Hard.Pink, content, spriteBatch, "Items/PinkBlock", position);
+                            brickList.Add(brick);
+                            ArkaGame.SegmentsList.AddRange(brick.GetSegments());
+                            brick.OnHit = () => DestroyBrick(brick);
+                            position.X += bricksize.X;
+                            break;
 
-                            case '5':
-                                _brick = new Brick(Hard.Metal, _content, _spriteBatch, "Items/MetalBlock", position);
-                                _brickList.Add(_brick);
-                                ArkaGame._segments.AddRange(_brick.GetSegments());
-                                _brick.OnHit = () => DestroyBrick(_brick);
-                                position += bricksizeX;
-                                break;
-                        }
+                        case '5':
+                            brick = new Brick(Hard.Metal, content, spriteBatch, "Items/MetalBlock", position);
+                            brickList.Add(brick);
+                            ArkaGame.SegmentsList.AddRange(brick.GetSegments());
+                            brick.OnHit = () => DestroyBrick(brick);
+                            position.X += bricksize.X;
+                            break;
                     }
-                    position.X = iniposition.X;
                 }
-                position.Y += bricksizeY.Y;
+                position.Y += bricksize.Y;
             }
         }
 
-        public void DestroyBrick(Brick brick)
+        public static void DestroyBrick(Brick brick)
         {
-            if (brick.destructible)
+            if (brick.IsDestructible)
             {
                 brick.Hit--;
                 if (brick.Hit >= 1)
                 {
                     brick.BrickBounce.Play();
-                    switch (brick.hardness)
+                    switch (brick.Hardness)
                     {
                         case Hard.Yellow:
                         case Hard.Pink:
@@ -178,14 +150,14 @@ namespace Arkanoid_02
 
                 if (brick.Hit <= 0)
                 {
-                    foreach (var segment in ArkaGame._segments)
-                        segment.ActiveSegment &= segment.Owner != brick;
+                    foreach (var segment in ArkaGame.SegmentsList)
+                        segment.IsActiveSegment &= segment.Owner != brick;
 
-                    brick.Active = false;
+                    brick.IsActive = false;
                     brick.Blast.Start();
                     brick.DestroyBounce.Play();
 
-                    switch (brick.hardness)
+                    switch (brick.Hardness)
                     {
                         case Hard.Blue:
                         case Hard.Green:
@@ -202,12 +174,11 @@ namespace Arkanoid_02
                     }
                 }
             }
-            if (!brick.destructible)
+            if (!brick.IsDestructible)
             {
                 brick.Glint.Start();
                 brick.MetalBounce.Play();
             }
         }
     }
-}       
-        
+}

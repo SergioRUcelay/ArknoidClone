@@ -11,24 +11,20 @@ namespace Arkanoid_02
     public class Brick : SpriteArk
     {
         public override Action OnHit { get; set; }
-        public Animations Blast;
-        public Animations Glint;
+        public Animations Blast, Glint;
+        public SoundEffect BrickBounce, MetalBounce, DestroyBounce;
 
         public int Hit { get; set; }
-        public readonly Hard hardness;
+        public readonly Hard Hardness;
 
-        public bool destructible;
-
-        public SoundEffect BrickBounce;
-        public SoundEffect MetalBounce;
-        public SoundEffect DestroyBounce;
+        public bool IsDestructible;
 
         public Brick(Hard ColorHitValue, ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
         {
-            hardness = ColorHitValue;
-            destructible = hardness != Hard.Metal;
+            Hardness       = ColorHitValue;
+            IsDestructible = Hardness != Hard.Metal;
 
-            switch (hardness)
+            switch (Hardness)
             {
                 case Hard.Metal:
                     Glint = new Animations(content, "Animation/Animation_MetalBlock_7", 7, 1, 0.03f);
@@ -65,10 +61,10 @@ namespace Arkanoid_02
         {
             return new Segment[]
             {
-                new() {End = new Vector2 (Size.X,0),     Ini = new Vector2(Size.X,Size.Y), Owner = this, ActiveSegment = true}, // Right
-                new() {End = new Vector2(Size.X,Size.Y), Ini = new Vector2(0,Size.Y),      Owner = this, ActiveSegment = true}, // Down
-                new() {End = new Vector2(0,Size.Y),      Ini = Vector2.Zero,               Owner = this, ActiveSegment = true}, // Left
-                new() {End = Vector2.Zero,               Ini = new Vector2 (Size.X,0),     Owner = this, ActiveSegment = true}, // Up
+                new() {End = new Vector2 (Size.X,0),      Ini = new Vector2 (Size.X,Size.Y), Owner = this, IsActiveSegment = true}, // Right
+                new() {End = new Vector2 (Size.X,Size.Y), Ini = new Vector2 (0,Size.Y),      Owner = this, IsActiveSegment = true}, // Down
+                new() {End = new Vector2 (0,Size.Y),      Ini = Vector2.Zero,                Owner = this, IsActiveSegment = true}, // Left
+                new() {End = Vector2.Zero,                Ini = new Vector2 (Size.X,0),      Owner = this, IsActiveSegment = true}, // Up
             };
         }
 
@@ -76,10 +72,10 @@ namespace Arkanoid_02
         {
             return new Segment[]
             {
-                new() {End = C + new Vector2 ( 20,0),                            Ini = B + new Vector2 (20,0),                          Owner = this, ActiveSegment = true}, // Right
-                new() {End = D + new Vector2 (-20,0) + new Vector2(0,200),       Ini = C + new Vector2 (20, 0)  + new Vector2(0,200),   Owner = this, ActiveSegment = true}, // Down
-                new() {End = A + new Vector2 ( 0,-20),                           Ini = D + new Vector2 (0,+20),                         Owner = this, ActiveSegment = true}, // Left
-                new() {End = B + new Vector2 (+20,0),                            Ini = A + new Vector2 (-20,0),                         Owner = this, ActiveSegment = true}, // Up
+                new() {End = C + new Vector2 ( 20,0),                       Ini = B + new Vector2 (20,0),                        Owner = this, IsActiveSegment = true}, // Right
+                new() {End = D + new Vector2 (-20,0) + new Vector2(0,200),  Ini = C + new Vector2 (20, 0)  + new Vector2(0,200), Owner = this, IsActiveSegment = true}, // Down
+                new() {End = A + new Vector2 ( 0,-20),                      Ini = D + new Vector2 (0,+20),                       Owner = this, IsActiveSegment = true}, // Left
+                new() {End = B + new Vector2 (+20,0),                       Ini = A + new Vector2 (-20,0),                       Owner = this, IsActiveSegment = true}, // Up
             };
         }
     }

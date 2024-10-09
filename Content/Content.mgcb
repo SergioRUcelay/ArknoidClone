@@ -164,13 +164,6 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/ArcadeClasic.spritefont
 
-#begin Fonts/ArkaFont.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:Fonts/ArkaFont.spritefont
-
 #begin Fonts/Cascadia.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor

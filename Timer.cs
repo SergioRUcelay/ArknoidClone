@@ -7,7 +7,7 @@ namespace Arkanoid_02
     {
         public event Action OnMatured;
         private readonly float delay;
-        private double TimeCountE;
+        private double timeCountE;
 
         public Timer(float timeDelay)
         {
@@ -15,12 +15,12 @@ namespace Arkanoid_02
         }
         public void Reset(GameTime gametime)
         {
-            TimeCountE = gametime.TotalGameTime.TotalSeconds;
+            timeCountE = gametime.TotalGameTime.TotalSeconds;
         }
 
         public void CountDown(GameTime gametime)
         {
-            if ((TimeCountE + delay) <= gametime.TotalGameTime.TotalSeconds)
+            if ((timeCountE + delay) <= gametime.TotalGameTime.TotalSeconds)
             {
                 Reset(gametime);
                 OnMatured?.Invoke();

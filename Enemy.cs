@@ -10,60 +10,52 @@ namespace Arkanoid_02
     public class Enemy : SpriteArk
     {
         public override Action OnHit { get; set; }
-        private readonly SpriteBatch spriteBatch;
         public Action Animation { get; set; }
-        
-        public Vector2 EnemyDirection;
-        public Vector2 UperLimit;
-        public Vector2 SpinCenter;
-        public Vector2 EnemyCenter;
-        private readonly string Enemytexture;
+        public Vector2 EnemyDirection, UperLimit, SpinCenter, EnemyCenter;
+        private readonly string enemyTexture;
         private uint degrees;
 
         public readonly float RadiusWidth;
-        public readonly Animations EnemyAnimation;
-        public readonly Animations Blast;
+        public readonly Animations EnemyAnimation, Blast;
         public readonly SoundEffect Dead;
 
         public Enemy(EnemyType clas, ContentManager content, SpriteBatch spriteBatch, int pos) : base(content, spriteBatch, pos)
         {
-            Position = (pos == 0)? new Vector2(115, 40) : new Vector2(505, 40);
-            this.spriteBatch = spriteBatch;
-            Enemytexture = "Animation/"+clas.ToString()+"_enemy";
-            
-            EnemyDirection = new Vector2(0.05f,0.5f);
-            UperLimit = new Vector2(25,150);
-            RadiusWidth = 60f;
-            degrees = 0;
-            EnemyAnimation = new(content, Enemytexture, 25,1,0.12f);            
-            Blast = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
-            Dead = content.Load<SoundEffect>("Sounds/EnemyDestroy");
+            Position         = (pos == 0)? new Vector2(115, 40) : new Vector2(505, 40);
+            enemyTexture     = "Animation/" + clas.ToString() + "_enemy";
+            EnemyDirection   = new Vector2(0.05f,0.5f);
+            UperLimit        = new Vector2(25,150);
+            RadiusWidth      = 60f;
+            degrees          = 0;
+            EnemyAnimation   = new(content, enemyTexture, 25,1,0.12f);            
+            Blast            = new Animations(content, "Animation/Blast_animation", 7, 1, 0.06f);
+            Dead             = content.Load<SoundEffect>("Sounds/EnemyDestroy");
 
-            SpinCenter = new(Position.X + EnemyAnimation.aniTexture.Width / EnemyAnimation.totalFrames / 2, Position.Y + EnemyAnimation.aniTexture.Height / 2);
-            EnemyCenter = new(EnemyAnimation.aniTexture.Width / EnemyAnimation.totalFrames / 2, EnemyAnimation.aniTexture.Height / 2);
-            EnemyAnimation.AnimaActive = true;
+            SpinCenter  = new(Position.X + EnemyAnimation.AnimaTexture.Width / EnemyAnimation.TotalFrames / 2, Position.Y + EnemyAnimation.AnimaTexture.Height / 2);
+            EnemyCenter = new(EnemyAnimation.AnimaTexture.Width / EnemyAnimation.TotalFrames / 2, EnemyAnimation.AnimaTexture.Height / 2);
+            EnemyAnimation.IsAnimaActive = true;
         }
 
         public Segment[] GetSegments()
         {
-            var EnemySegmentPosition = new Vector2(EnemyAnimation.aniTexture.Width / EnemyAnimation.totalFrames / 2, 0);
+            var enemySegmentPosition = new Vector2(EnemyAnimation.AnimaTexture.Width / EnemyAnimation.TotalFrames / 2, 0);
             return new Segment[]
             {
-                new() {End = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,          EnemyAnimation.aniTexture.Height),
-                       Ini = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),       EnemyAnimation.aniTexture.Height),
-                    Owner = this, ActiveSegment = true},
+                new() {End = enemySegmentPosition + new Vector2 (EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2,       EnemyAnimation.AnimaTexture.Height),
+                       Ini = enemySegmentPosition + new Vector2 (-(EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2),    EnemyAnimation.AnimaTexture.Height),
+                    Owner = this, IsActiveSegment = true},
 
-                new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),       EnemyAnimation.aniTexture.Height),
-                       Ini = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),0),
-                    Owner = this, ActiveSegment = true},
+                new() {End = enemySegmentPosition + new Vector2 (-(EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2),    EnemyAnimation.AnimaTexture.Height),
+                       Ini = enemySegmentPosition + new Vector2 (-(EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2),0),
+                    Owner = this, IsActiveSegment = true},
 
-                new() {End = EnemySegmentPosition + new Vector2 (-(EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2),0),
-                       Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,0),
-                    Owner = this, ActiveSegment = true},
+                new() {End = enemySegmentPosition + new Vector2 (-(EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2),0),
+                       Ini = enemySegmentPosition + new Vector2 (EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2,0),
+                    Owner = this, IsActiveSegment = true},
 
-                new() {End = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,0),
-                       Ini = EnemySegmentPosition + new Vector2 (EnemyAnimation.aniTexture.Width/EnemyAnimation.totalFrames/2,          EnemyAnimation.aniTexture.Height),
-                    Owner = this, ActiveSegment = true},
+                new() {End = enemySegmentPosition + new Vector2 (EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2,0),
+                       Ini = enemySegmentPosition + new Vector2 (EnemyAnimation.AnimaTexture.Width/EnemyAnimation.TotalFrames/2,       EnemyAnimation.AnimaTexture.Height),
+                    Owner = this, IsActiveSegment = true},
             };
         }
         

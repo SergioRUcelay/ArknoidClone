@@ -11,7 +11,6 @@ namespace Arkanoid_02
             float copy = orth.Y;
             orth.Y = orth.X;
             orth.X = -1 * copy;
-
             return orth;
         }
     }
@@ -26,26 +25,25 @@ namespace Arkanoid_02
         /// <returns> Segment, distance tuple </returns>
         public static (float, Segment) Collision(List<Segment> segment, Vector2 direction, Vector2 position)
         {
-            float minDistance = float.PositiveInfinity;            
+            float minDistance = float.PositiveInfinity;
             Segment collider = null;
 
             // Seeking the nearest segment.
             foreach (Segment _segment in segment)
             {
                 // Cheking active segment
-                if (_segment.ActiveSegment == false)
+                if (_segment.IsActiveSegment == false)
                     continue;
                 // Evaluate if the normal and direction have the same value.
                 if (Vector2.Dot(direction, _segment.Normal) > 0)
                     continue;
 
                 float newestDistance = DistancePointLineAlongDir(position, direction, _segment.End, _segment.Ini);
-
-                // This is the future position.
-                Vector2 c = position + newestDistance * direction;
+ 
+                Vector2 futurePosition = position + newestDistance * direction;
 
                 // Evaluate if the point it`s in the segment.
-                if (Ifbetween(_segment.Ini, _segment.End, c))
+                if (Ifbetween(_segment.Ini, _segment.End, futurePosition))
                 {
                     if (newestDistance < minDistance)
                     {
@@ -59,12 +57,12 @@ namespace Arkanoid_02
        
         public static Collision CollideWithWorld(List<Segment> segments, Vector2 direction, Vector2 position, float radius)
         {
-            Collision col = new();
+            Collision _collider = new();
 
             foreach (Segment _segment in segments)
             {
                 //  Cheking active segment
-                if (_segment.ActiveSegment == false)
+                if (_segment.IsActiveSegment is false)
                     continue;
 
                 // Evaluate if the normal and direction have the same value
@@ -73,10 +71,10 @@ namespace Arkanoid_02
 
                 Collision newCollition = CollideDiskSegment(position, radius, _segment);
 
-                if (newCollition.depth > col.depth)
-                    col = newCollition;
+                if (newCollition.Depth > _collider.Depth)
+                    _collider = newCollition;
             }
-            return col;
+            return _collider;
 
         }
         public static Vector2 NearestPointOnSegment(Vector2 p, Segment seg)
@@ -101,8 +99,8 @@ namespace Arkanoid_02
             return new()
             {
                 Normal = delta / distance,
-                depth = radius - distance,
-                seg = seg
+                Depth = radius - distance,
+                Seg = seg
             };
         }
 
@@ -161,5 +159,3 @@ namespace Arkanoid_02
         }
     }
 }
-    
-

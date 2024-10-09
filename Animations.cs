@@ -8,42 +8,42 @@ namespace Arkanoid_02
 {
     public class Animations
     {
-        private Action AnimationEnd;
-        public readonly List<Rectangle> _frames = new();
-        public readonly Texture2D aniTexture;
+        private Action animationEnd;
+        public readonly List<Rectangle> framesList = new();
+        public readonly Texture2D AnimaTexture;
 
-        public readonly int totalFrames;
+        public readonly int TotalFrames;
         private readonly double frameTime;
         private int currentFrame  = 0;
         private double currenTime = 0;
         
-        public bool AnimaActive;
+        public bool IsAnimaActive;
 
         public Animations(ContentManager content, string texture, int frameX, int frameY, double timeF, int row = 1)
         {
-            aniTexture  = content.Load<Texture2D>(texture);
-            totalFrames = frameX;
+            AnimaTexture  = content.Load<Texture2D>(texture);
+            TotalFrames = frameX;
             frameTime   = timeF;
-            var frameWidth  = aniTexture.Width  / frameX;
-            var frameHeight = aniTexture.Height / frameY;
+            var frameWidth  = AnimaTexture.Width  / frameX;
+            var frameHeight = AnimaTexture.Height / frameY;
 
-            for (int i = 0; i < totalFrames; i++)
+            for (int i = 0; i < TotalFrames; i++)
             {
-                _frames.Add(new(frameWidth * i, frameHeight * (row - 1), frameWidth, frameHeight));
+                framesList.Add(new(frameWidth * i, frameHeight * (row - 1), frameWidth, frameHeight));
             }
         }
 
         public void Start() => Start(() => { });
         
-        public void Start(Action peich)
+        public void Start(Action action)
         {
-            AnimationEnd += () => { AnimaActive = false; peich(); };
-            AnimaActive  = true;
+            animationEnd += () => { IsAnimaActive = false; action(); };
+            IsAnimaActive  = true;
             currentFrame = 0;
             currenTime   = 0;
         }
 
-        public void Stop() => AnimationEnd?.Invoke();
+        public void Stop() => animationEnd?.Invoke();
 
         public void Reset()
         {
@@ -53,41 +53,41 @@ namespace Arkanoid_02
 
         public void Update(GameTime gametime)
         {
-            if (!AnimaActive) return;
+            if (!IsAnimaActive) return;
 
             currenTime += gametime.ElapsedGameTime.TotalSeconds;
             if (currenTime >= frameTime)
             {
                 currenTime = 0;
-                currentFrame = (currentFrame + 1) % totalFrames;
+                currentFrame = (currentFrame + 1) % TotalFrames;
             }
 
-            if (currentFrame >= totalFrames - 1)
-               Stop();              
+            if (currentFrame >= TotalFrames - 1)
+               Stop();
         }
 
         public void UpdateLoop(GameTime gametime)
         {
-            if (!AnimaActive) return;
+            if (!IsAnimaActive) return;
 
             currenTime += gametime.ElapsedGameTime.TotalSeconds;
             if (currenTime >= frameTime)
             {
                 currenTime = 0;
-                currentFrame = (currentFrame + 1) % totalFrames;
+                currentFrame = (currentFrame + 1) % TotalFrames;
             }
         }
 
         public void Draw(SpriteBatch sprite, Vector2 pos)
         {
-            if (!AnimaActive) return;
-            sprite.Draw(aniTexture, pos, _frames[currentFrame], Color.White);
+            if (!IsAnimaActive) return;
+            sprite.Draw(AnimaTexture, pos, framesList[currentFrame], Color.White);
         }
 
         public void Draw(SpriteBatch sprite, Rectangle rect)
         {
-            if (!AnimaActive) return;
-            sprite.Draw(aniTexture, rect, _frames[currentFrame], Color.White);
+            if (!IsAnimaActive) return;
+            sprite.Draw(AnimaTexture, rect, framesList[currentFrame], Color.White);
         }
     }
-  }   
+  }
