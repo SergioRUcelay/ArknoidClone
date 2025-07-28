@@ -14,7 +14,7 @@
 	</xsl:template>
 
 	<xsl:template match="CommandReply">
-		<div style="margin-bottom: 1em; font-family: monospace;">
+		<div style="margin-bottom: 1em; font-family: monospace; font-size: 18px; color: white;">
 
 			<!-- Type -->
 			<xsl:choose>
@@ -90,7 +90,7 @@
 
 				<!-- Return not contains image -->
 				<xsl:otherwise>
-					<div style="color: blue;">
+					<div style="color: grey;">
 						<strong>Return:</strong>
 						<xsl:value-of select="Return"/>
 					</div>

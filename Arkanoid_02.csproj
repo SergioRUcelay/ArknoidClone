@@ -48,6 +48,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\ConsoleFiles\XSL_HTMLTFile.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Content\XSL_HTMLTFile.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

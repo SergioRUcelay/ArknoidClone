@@ -747,7 +747,7 @@ namespace Arkanoid_02
 			XslCompiledTransform xslTranslater = new();
             try
             {
-                var xslFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", "XSL_HTMLTFile.xslt");
+                var xslFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content/ConsoleFiles", "XSL_HTMLTFile.xslt");
                 xslTranslater.Load(xslFile);
                 using (StringWriter texOutput = new())
 			    {
