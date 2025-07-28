@@ -1,16 +1,28 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Arkanoid;
+using Command_Interpreter;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework.Media;
-using Keys = Microsoft.Xna.Framework.Input.Keys;
-using System.Threading;
-using System.Diagnostics;
+using SharpDX.X3DAudio;
 using Stateless;
 using Stateless.Graph;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing.Text;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Serialization;
+using System.Xml.Xsl;
+using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace Arkanoid_02
 {
@@ -18,11 +30,15 @@ namespace Arkanoid_02
     enum Trigger { ToMenu, ToLevelStart, ToPreplay, ToPlay, ToPlayerDies, ToLevelEnd, ToGameOver };
 
     /// <summary>
-    /// Manage all game. Create all game objet. Manage the loop-game and draw method.
+    /// Represents the main game class for the Arkanoid-style game.
     /// </summary>
+    /// <remarks>This class manages the overall game flow, including state transitions, game object
+    /// initialization, rendering, and updates. It uses a finite state machine (FSM) to control the game's states, such
+    /// as menu, gameplay, level transitions, and game over. The game logic includes paddle movement, ball physics,
+    /// enemy management, and scoring.</remarks>
     public class ArkaGame : Game
     {
-        private readonly StateMachine<GameState, Trigger> fsm = new (GameState.START);
+        private readonly StateMachine<GameState, Trigger> fsm = new(GameState.START);
         private readonly GraphicsDeviceManager graphics;
         private readonly Timer enemyTimer = new(5f);
         private readonly Timer levelTextTimer = new(2.2f);
@@ -33,10 +49,13 @@ namespace Arkanoid_02
         private SpriteFont numberPointFont, lifeLeft;
         private Texture2D arkaLogo;
 
-        // Describes the boundaries of the game board.
-        private Vector2 A_Limit, B_Limit, C_Limit, D_Limit;
+        // Instanciate Shapes Class.
+        private Shapes shapes;
 
-        // Game Objets
+		// Describes the boundaries of the game board.
+		private Vector2 A_Limit, B_Limit, C_Limit, D_Limit;
+
+        // Game Objects
         private Level level;
         private Screen screen;
         private Brick screeLimit;
@@ -56,16 +75,23 @@ namespace Arkanoid_02
 
         private bool showLife;
         private bool showLevel;
+        private bool infiniteLife;
 
-        // This two variable manages time for speed increment of ball in "IncreaseBallSpeedOverTime" method.
+        public static bool drawshapes;
+        public static bool drawbricks;
+
+        // These two variable manage time for speed increment of the ball in "IncreaseBallSpeedOverTime" method.
         private float timeCount;
         private float elapsedTime = 10f;
         private int currentLevel;
 
-        /// <summary>
-        /// Constructor of class. Configurate the finite state machine.
-        /// </summary>
-        public ArkaGame()
+        // Comand Interpreter
+        private string textconsole;
+        private readonly Commands com = new Commands();
+
+		HttpListener listener = new HttpListener();
+
+		public ArkaGame()
         {
             fsm.Configure(GameState.START)
                 .Permit(Trigger.ToMenu, GameState.MENU);
@@ -96,6 +122,8 @@ namespace Arkanoid_02
             fsm.Configure(GameState.PLAY)
                 .Permit(Trigger.ToLevelEnd, GameState.LEVELEND)
                 .Permit(Trigger.ToPlayerDies, GameState.PLAYERDIES)
+                // Implementation for Command_interpreter
+                .Permit(Trigger.ToLevelStart, GameState.LEVELSTART)
 
                 .OnEntry(() =>
                 {
@@ -112,9 +140,11 @@ namespace Arkanoid_02
             fsm.Configure(GameState.PLAYERDIES)
                 .Permit(Trigger.ToPreplay, GameState.PREPLAY)
                 .Permit(Trigger.ToGameOver, GameState.GAMEOVER)
-                .OnEntry(()=>
+                .OnEntry(() =>
                 {
-                    paddle.Death();
+                    if (!infiniteLife)
+                        paddle.Death();
+                    else paddle.InfiniteLife();
                     EnemyScreenErase();
                     lifeTextTimer.Reset(gameTime);
                 });
@@ -133,36 +163,77 @@ namespace Arkanoid_02
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = false;
+            infiniteLife = false;
 
-            graphics.PreferredBackBufferWidth  = 843;
+
+            graphics.PreferredBackBufferWidth = 843;
             graphics.PreferredBackBufferHeight = 900;
             A_Limit = new Vector2(25, 100);
             B_Limit = new Vector2(800, 100);
             C_Limit = new Vector2(800, 875);
             D_Limit = new Vector2(25, 875);
 
-            MaxPoints       = 5000;
+            MaxPoints = 5000;
             ExtraLifePoints = 12000;
 
+            // Code that provides the string to represent a draw that describes the FiniteStateMachine interdependencies.
             //string graph = UmlDotGraph.Format(fsm.GetInfo());
             //Console.WriteLine(graph);
+
+
+            // Adding functions to the CommandInterpreter.
+            try
+            {
+                com.AddFunc("il", InfiniteLives, "Activate infinite lives");
+                com.AddFunc("lv", SwichLevel, "Swich the current level");
+				com.AddFunc("lv", GetLevel, "Swich the current level");
+                com.AddFunc("Seg", DrawShape, "Swich on-off the visivility of the segments");
+                com.AddFunc("Brick", DrawBrick, "Swich on-off the visivility of the bricks");
+                com.AddFunc("Cap", CaptureWindow, "Capture a screen of the game");
+
+			}
+			catch (Exception e)
+            {
+
+                Console.WriteLine(e.ToString());
+            }
+
         }
 
-       /// <summary>
-       /// Initializate method.
-       /// </summary>
+        /// <summary>
+        /// Initializes the game components and sets up the initial game state.
+        /// </summary>
+        /// <remarks>This method is responsible for creating and configuring the primary game objects, 
+        /// including the level, screen, paddle, ball, and doors. It also sets up event handlers  for timers and game
+        /// state transitions. This method is called once during the game's  initialization phase.</remarks>
         protected override void Initialize()
         {
-            spriteBatch     = new SpriteBatch   (GraphicsDevice);
-            level           = new Level         (Services, spriteBatch,Content);
-            screen          = new Screen        (Services, spriteBatch);
-            screeLimit      = new Brick         (Hard.Blue, Content, spriteBatch, "Items/BlueBlock", Vector2.Zero);
-            paddle          = new Paddle        (Content, spriteBatch, "Items/Player", new Vector2(365, 810));
-            ball            = new Ball          (Content, spriteBatch, "Items/ball", new Vector2(380, 840));
-            doorArray[0]    = new Door          (Content, spriteBatch, "Items/door", new Vector2(182, 75));
-            doorArray[1]    = new Door          (Content, spriteBatch, "Items/door", new Vector2(573, 75));
 
-            enemyTimer.OnMatured += async () =>
+ //--------- Configuration the console. ------------------
+
+			// Configure the port to be used.
+			listener.Prefixes.Add("http://localhost:7000/");
+            // Initialize the port.
+		    listener.Start();// I initialize the listening
+			Console.WriteLine("Websocket server started at ws://localhost:7000/");
+
+//--------- End the configuration. ------------------
+
+			spriteBatch     = new SpriteBatch(GraphicsDevice);
+            level           = new Level(Services, spriteBatch, Content);
+            screen          = new Screen(Services, spriteBatch);
+            screeLimit      = new Brick(Hard.Blue, Content, spriteBatch, "Items/BlueBlock", Vector2.Zero);
+            paddle          = new Paddle(Content, spriteBatch, "Items/Player", new Vector2(365, 810));
+            ball            = new Ball(Content, spriteBatch, "Items/ball", new Vector2(380, 840));
+            doorArray[0]    = new Door(Content, spriteBatch, "Items/door", new Vector2(182, 75));
+            doorArray[1]    = new Door(Content, spriteBatch, "Items/door", new Vector2(573, 75));
+
+			// Initialize the shape Class, for render the segments
+			shapes = new Shapes(this);
+            drawshapes = false;
+            drawbricks = true;
+
+			enemyTimer.OnMatured += async () =>
             {
                 var e = new Random().Next(0, 2);
                 Door.DoorOpenCast(doorArray[e]);
@@ -193,26 +264,37 @@ namespace Arkanoid_02
         }
 
         /// <summary>
-        /// Load all game objets, textures, sound, etc.
+        /// Loads the content required for the game, including textures, fonts, and audio assets.
         /// </summary>
+        /// <remarks>This method is called during the initialization phase to load all necessary game
+        /// resources. It prepares textures, fonts, sound effects, and songs that are used throughout the game.
+        /// Additionally, it transitions the game state to the main menu.</remarks>
         protected override void LoadContent()
         {
-            arkaLogo         = Content.Load<Texture2D>("Items/ArkaLogo");
-            numberPointFont  = Content.Load<SpriteFont>("Fonts/Points");
-            lifeLeft         = Content.Load<SpriteFont>("Fonts/Points");
-            ballWallBounce   = Content.Load<SoundEffect>("Sounds/WallBounce");
-            newLevelSound    = Content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
-            welcomeSong      = Content.Load<Song>("Sounds/Start_Demo");
-            gameOverSong     = Content.Load<Song>("Sounds/05_-_Arkanoid_-_NES_-_Game_Over");
+            arkaLogo        = Content.Load<Texture2D>("Items/ArkaLogo");
+            numberPointFont = Content.Load<SpriteFont>("Fonts/Points");
+            lifeLeft        = Content.Load<SpriteFont>("Fonts/Points");
+            ballWallBounce  = Content.Load<SoundEffect>("Sounds/WallBounce");
+            newLevelSound   = Content.Load<Song>("Sounds/02_-_Arkanoid_-_NES_-_Game_Start");
+            welcomeSong     = Content.Load<Song>("Sounds/Start_Demo");
+            gameOverSong    = Content.Load<Song>("Sounds/05_-_Arkanoid_-_NES_-_Game_Over");
+
             fsm.Fire(Trigger.ToMenu);
         }
 
         /// <summary>
-        /// Manage all loop-game.
+        /// Updates the game state and processes game logic based on the current state of the finite state machine (FSM).
         /// </summary>
-        /// <param name="gameTime"></param>
+        /// <remarks>This method is called once per frame and handles input, state transitions, and game
+        /// logic for the active game state. It processes keyboard input (e.g., exiting the game or transitioning between
+        /// states) and delegates specific behavior  to the appropriate state logic, such as displaying screens, managing
+        /// timers, or updating gameplay elements.</remarks>
+        /// <param name="gameTime">The current game time, which provides timing values for the update cycle.</param>
         protected override void Update(GameTime gameTime)
         {
+            // Comunication with the console.
+			Listener(listener);
+
             //We store a copy for the internal use of the FSM as the timers do require it
             this.gameTime = gameTime;
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -224,7 +306,7 @@ namespace Arkanoid_02
                     screen.WelcomeScreen(gameTime);
                     if (Keyboard.GetState().IsKeyDown(Keys.P))
                         fsm.Fire(Trigger.ToLevelStart);
-                break;
+                    break;
 
                 case GameState.PREPLAY:
                     if (showLevel)
@@ -232,11 +314,11 @@ namespace Arkanoid_02
                     if (showLife)
                         lifeTextTimer.CountDown(gameTime);
                     enemyTimer.Reset(gameTime);
-                break;
+                    break;
 
                 case GameState.PLAY:
                     WeArePlaying();
-                break;
+                    break;
 
                 case GameState.PLAYERDIES:
                     if (paddle.Life > 0)
@@ -246,29 +328,29 @@ namespace Arkanoid_02
                     }
                     else
                         fsm.Fire(Trigger.ToGameOver);
-                break;
+                    break;
 
                 case GameState.LEVELEND:
                     currentLevel = ++currentLevel % 4;
                     fsm.Fire(Trigger.ToLevelStart);
-                break;
+                    break;
 
                 case GameState.GAMEOVER:
                     screen.ScreenBlackGameOver(gameTime);
                     gameOverScreenTimer.CountDown(gameTime);
-                break;
+                    break;
             }
             base.Update(gameTime);
         }
 
         /// <summary>
-        /// Method for representate on screen all game obget.
+        /// Renders the game elements to the screen based on the current game state.
         /// </summary>
-        /// <param name="gameTime"></param>
+        /// <param name="gameTime">Provides a snapshot of timing values for the current frame.</param>
         protected override void Draw(GameTime gameTime)
         {
             spriteBatch.Begin();
-            
+
             if (fsm.State == GameState.PLAY || fsm.State == GameState.PREPLAY)
             {
                 level.Draw(gameTime);
@@ -281,7 +363,7 @@ namespace Arkanoid_02
                 spriteBatch.DrawString(numberPointFont, maxpoints, new Vector2(400, 20), Color.WhiteSmoke);
 
                 // Round
-                string l_Number = (currentLevel+1).ToString();
+                string l_Number = (currentLevel + 1).ToString();
                 spriteBatch.DrawString(numberPointFont, l_Number, new Vector2(635, 34), Color.WhiteSmoke);
 
                 // Lives
@@ -332,31 +414,33 @@ namespace Arkanoid_02
                         enemy.Blast.Update(gameTime);
                         enemy.Blast.Draw(spriteBatch, enemy.Position);
                     }
-                    //else the enemy was deactivated as it exited through the bottom
                 }
             }
 
-            spriteBatch.End();
+			spriteBatch.End();
 
-//-----------------------------------------This code displays the segments on the screen. ----------------------------
-            //shapes.Begin();
-            //if (fsm.State == GameState.PLAY)
-            //{
-            //    foreach (var seg in _segments)
-            //    {
-            //        if (seg.ActiveSegment)
-            //            shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
-            //    }
-            //}
-            //shapes.End();
+            // This code displays the segments on the screen.
+            if (drawshapes)
+            {
+                shapes.Begin();
+                if (fsm.State == GameState.PLAY)
+                {
+                    foreach (var seg in SegmentsList)
+                    {
+                        if (seg.IsActiveSegment)
+                            shapes.Drawline(new(seg.Ini.X, 900 - seg.Ini.Y), new(seg.End.X, 900 - seg.End.Y), 1, Color.White);
+                    }
+                }
+                shapes.End();
 
-            //base.Draw(gameTime);
+                base.Draw(gameTime);
+            }
         }
-  
-        /// <summary>
-        /// Calls to the diferents methodes that makes we can play.
-        /// </summary>
-        private void WeArePlaying()
+
+		/// <summary>
+		/// Calls to the different methods that makes we can play.
+		/// </summary>
+		private void WeArePlaying()
         {
             //Manage paddle.
             Debug.Assert(paddle.IsActive);
@@ -374,13 +458,13 @@ namespace Arkanoid_02
                 Thread.Sleep(1000);
                 fsm.Fire(Trigger.ToLevelEnd);
             }
-            
+
             //Manage Enemies.
             UpdateEnemies(gameTime);
         }
 
         /// <summary>
-        /// Draw the number of lives left at the begenning of the level.
+        /// Draw the number of lives left at the beginning of the level.
         /// </summary>
         private void DrawLifeLeftText()
         {
@@ -390,7 +474,7 @@ namespace Arkanoid_02
         }
 
         /// <summary>
-        /// Draw the number of level that are we playing.
+        /// Draw the number of the level that we are playing.
         /// </summary>
         private void DrawLevelNumberText()
         {
@@ -400,9 +484,9 @@ namespace Arkanoid_02
         }
 
         /// <summary>
-        /// Manages the paddle`s movement
+        /// This method manages the paddle's movement.
         /// </summary>
-        /// <param name="gameTime"></param>
+        /// <param name="gameTime"> Provides a snapshot of timing values for the current frame. </param>
         public void PaddleMovement(GameTime gameTime)
         {
             var keyState = Keyboard.GetState();
@@ -413,7 +497,7 @@ namespace Arkanoid_02
                 movement = 1;
             paddle.Position.X += movement * paddle.PaddleDirection.X * paddle.PaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
         }
-        
+
         /// <summary>
         /// To beging the ball movement.
         /// </summary>
@@ -432,7 +516,7 @@ namespace Arkanoid_02
         /// <summary>
         /// Code for control the segment collision with a Circle/Ball.
         /// </summary>
-        /// <param name="gameTime"></param>
+        /// <param name="gameTime"> Provides a snapshot of timing values for the current frame. </param>
         private void CollisionAndMotionController(GameTime gameTime)
         {
             ball.Circle.Center += ball.Speed * ball.Direction * (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -451,7 +535,7 @@ namespace Arkanoid_02
         /// <summary>
         /// Animate the ball and the increasing his speed over time.
         /// </summary>
-        /// <param name="gameTime"></param>
+        /// <param name="gameTime"> Provides a snapshot of timing values for the current frame. </param>
         public void IncreaseBallSpeedOverTime(GameTime gameTime)
         {
             if (ball.IsActive && !ball.Attach)
@@ -477,13 +561,13 @@ namespace Arkanoid_02
         /// <summary>
         ///  Manage Enemy.
         /// </summary>
-        /// <param name="gameTime"></param>
+        /// <param name="gameTime"> Provides a snapshot of timing values for the current frame. </param>
         private void UpdateEnemies(GameTime gameTime)
         {
             if (ball.IsActive == true && ball.Attach == false && enemyList.Count < 5)
                 enemyTimer.CountDown(gameTime);
             else
-                enemyTimer.Reset(gameTime);
+                enemyTimer.Reset(gameTime);  
 
             enemyList.RemoveAll(e => !e.IsActive && !e.Blast.IsAnimaActive);
 
@@ -523,9 +607,12 @@ namespace Arkanoid_02
         }
 
         /// <summary>
-        /// When the enemy crosses the bottom of the screen. Clear and disable the enemies and their segments from a list. And subtracts them from the EnemyNumber value.
+        /// Deactivates the specified enemy and updates the active state of related segments.
         /// </summary>
-        /// <param name="enemy"></param>
+        /// <remarks>This method sets the <see cref="Enemy.IsActive"/> property of the specified enemy to <see
+        /// langword="false"/>. Additionally, it updates the active state of segments in the <c>SegmentsList</c> to ensure no
+        /// segment remains associated with the deactivated enemy.</remarks>
+        /// <param name="enemy">The enemy to deactivate. Cannot be null.</param>
         public static void DeactivateEnemy(Enemy enemy)
         {
             foreach (var segment in SegmentsList)
@@ -533,10 +620,13 @@ namespace Arkanoid_02
             enemy.IsActive = false;
         }
 
+        /// <summary>
+        /// Removes all screen segments associated with enemies from the segment list.
+        /// </summary>
         private static void EnemyScreenErase()
         {
             foreach (var enemy in enemyList)
-                SegmentsList.RemoveAll(segment => segment.Owner == enemy); 
+                SegmentsList.RemoveAll(segment => segment.Owner == enemy);
         }
 
         /// <summary>
@@ -553,9 +643,9 @@ namespace Arkanoid_02
         }
 
         /// <summary>
-        /// Prepare game to create a new level.
+        /// Initializes the specified game level and transitions the game state to the preplay phase.
         /// </summary>
-        /// <param name="_level"></param>
+        /// <param name="_level">The level number to initialize. Must be a valid level identifier.</param>
         private void LevelStart(int _level)
         {
             showLevel = true;
@@ -563,5 +653,131 @@ namespace Arkanoid_02
             level.Iniciate(_level);
             fsm.Fire(Trigger.ToPreplay);
         }
-    }
+
+// ----------- Methods for use with the Command Interpreter Dll. ---------------------
+        private string GetLevel()
+        {
+            return currentLevel.ToString();
+		}
+		private void SwichLevel(int _level)
+		{
+			currentLevel = _level;
+			fsm.Fire(Trigger.ToLevelStart);
+		}
+
+		public string InfiniteLives(bool value)
+        {
+            infiniteLife = value;
+            return $"player {(value? "has":"doesn't have")} infinite lives";
+        }
+
+        public void DrawShape(string value)
+        {
+            if (value == "on")
+                drawshapes = true;
+            if (value == "off")
+                drawshapes = false;
+        }
+
+		public void DrawBrick(string value)
+		{
+			if (value == "on")
+				drawbricks = true;
+			if (value == "off")
+				drawbricks = false;
+		}
+
+        public Texture2D CaptureWindow()
+        {
+            int w = GraphicsDevice.PresentationParameters.BackBufferWidth;
+            int h = GraphicsDevice.PresentationParameters.BackBufferHeight;
+		    Texture2D deltaCapture = new (GraphicsDevice, GraphicsDevice.PresentationParameters.BackBufferWidth, GraphicsDevice.PresentationParameters.BackBufferHeight, false, SurfaceFormat.Color);
+			Color[] pixelData = new Color[h * w];
+
+            GraphicsDevice.GetBackBufferData(pixelData);
+            deltaCapture.SetData(pixelData);
+            return deltaCapture;
+        }
+
+
+// --------------- Methods to prepare the communication with the Web-Console. --------------------
+		public async void Listener(HttpListener listener)
+        {
+			HttpListenerContext context = await listener.GetContextAsync(); // I store in "context" what arrives through the listener.
+			if (context.Request.IsWebSocketRequest)// If there is a request.
+			{
+				HttpListenerWebSocketContext wsConstext = await context.AcceptWebSocketAsync(null); // We access the Listener information
+																									// We put it in a separate Task. This way, we don't lose responses (if we put an await, we might lose it).
+				Task.Run(() => ReadWebSocket(wsConstext.WebSocket, com));
+			}
+			else // We only expect websocket requests. We return an error for non-websocket requests.
+			{
+				context.Response.StatusCode = 400;
+				context.Response.Close();
+			}
+		}
+		static async Task ReadWebSocket(WebSocket socket, Commands com)
+		{
+			byte[] buffer = new byte[10234]; // Creating the byte array where we will save the request.
+			while (socket.State == WebSocketState.Open) // As long as the websocket is open.
+			{
+				// We save in 'result' what we receive from the WebSocket, as an Array segment of what is in the 'buffer'
+				WebSocketReceiveResult webCommand = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+				string command = Encoding.UTF8.GetString(buffer, 0, webCommand.Count);// We encode a String in UTF8
+
+				CommandReply result = com.Command(command);
+                if (result.Return is Texture2D buffa)
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        buffa.SaveAsPng(ms, buffa.Width, buffa.Height);
+                        result.Return = Convert.ToBase64String(ms.ToArray());
+                    }
+                }
+				Console.WriteLine($"Message received: {command}");
+
+				string xmlOutput = WriterOfNewXmlString(result);
+				string response = XmlToText(xmlOutput);// Response string
+				byte[] responseBytes = Encoding.UTF8.GetBytes(response); // Conversion of String to Array of Bytes
+				await socket.SendAsync(new ArraySegment<byte>(responseBytes), WebSocketMessageType.Text, true, CancellationToken.None); // Enviamos la respuesta.
+			}
+		}
+		static string XmlToText(string xml)
+		{
+			XslCompiledTransform xslTranslater = new();
+            try
+            {
+                var xslFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", "XSL_HTMLTFile.xslt");
+                xslTranslater.Load(xslFile);
+                using (StringWriter texOutput = new())
+			    {
+				    using XmlReader xmlMemory = XmlReader.Create(new StringReader(xml));
+				    xslTranslater.Transform(xmlMemory, null, texOutput);
+				    xml = texOutput.ToString();
+			    }
+			    xml = xml.Replace("\\x1b", "\x1b"); // Replace the \x1b with the escape character for color as .NET can not generate escape characters from Xslt.
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine($"The { ex.FileName} not found at said location");
+            }
+			return xml;
+		}
+
+		static string WriterOfNewXmlString<T>(T newxmlmessage)
+		{
+			// Declare the needed variables
+			string consoleOutput;
+
+			StringWriter logEntryWriter = new();
+			XmlSerializer _serializerFor_LogEntry = new(typeof(T));
+
+			_serializerFor_LogEntry.Serialize(logEntryWriter, newxmlmessage);
+
+			consoleOutput = logEntryWriter.ToString();
+			return consoleOutput;
+		}
+	}
+
+    
 }

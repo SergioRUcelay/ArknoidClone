@@ -32,11 +32,15 @@ namespace Arkanoid_02
             spriteBatch.Draw(backGround, new Vector2(0, 0), Color.White);
             spriteBatch.Draw(scoreZone, new Vector2(0, 0), Color.White);
 
-            foreach (var brick in brickList)
+            if (ArkaGame.drawbricks)
             {
-                // Here call a Draw method of the objet.
-                brick.Draw(gameTime);
-            }
+				foreach (var brick in brickList)
+				{
+					// Here call a Draw method of the objet.
+					brick.Draw(gameTime);
+				}
+			}
+            
 
             foreach (var brick in brickList)
             {

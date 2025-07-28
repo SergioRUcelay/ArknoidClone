@@ -21,7 +21,7 @@ namespace Arkanoid_02
         public SoundEffect ExtraLife;
         public bool canMove;
 
-        public int Life { get; set; }        
+        public int Life { get; set; }
         public readonly float PaddleSpeed;
 
         public Paddle(ContentManager content, SpriteBatch spriteBatch, string texture, Vector2 pos) : base(content, spriteBatch, texture, pos)
@@ -53,7 +53,17 @@ namespace Arkanoid_02
             Thread.Sleep(1500);
         }
 
-        public Segment[] GetSegments()
+        /// <summary>
+        /// For testing Dev mode. Desactivates the countdown of the player's lives.
+        /// </summary>
+		public void InfiniteLife()
+		{
+			IsActive = false;
+			dead.Play();
+			Thread.Sleep(1500);
+		}
+
+		public Segment[] GetSegments()
         {
             return new Segment[]
             {

@@ -22,7 +22,7 @@ namespace Arkanoid_02
             welcome             = content.Load<Texture2D>("Screens/MainScreen");
             pressP              = content.Load<SpriteFont>("Fonts/MainScreen");
             blackGameOver       = content.Load<Texture2D>("Screens/Black"); 
-            this.spriteBatch         = spriteBatch;        
+            this.spriteBatch    = spriteBatch;
             welcomePosition     = Vector2.Zero;
             pressP_Position     = new Vector2(230,530);  // Tex "Press P for play".
         }

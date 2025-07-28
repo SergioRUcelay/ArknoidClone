@@ -17,13 +17,13 @@ namespace Arkanoid_02
 
     static class ArkaMath
     {
-        /// <summary> Scroll throught a list of segments to find the closest collision. </summary>
-        /// <param name="segment"> List of segments </param>
-        /// <param name="direction"> Direction that follow the point on moviment </param>
-        /// <param name="position"> The position of the point</param>
-        /// <param name="gameTime"> Holds the time state of a Game. (MonoGame -Microsoft.Xna.FrameWork-) </param>
-        /// <returns> Segment, distance tuple </returns>
-        public static (float, Segment) Collision(List<Segment> segment, Vector2 direction, Vector2 position)
+		/// <summary> Scrolls through a list of segments to find the closest collision. </summary>
+		/// <param name="segment"> List of segments. </param>
+		/// <param name="direction"> Direction that the point follows during movement. </param>
+		/// <param name="position"> The position of the point. </param>
+		/// <param name="gameTime"> Holds the time state of a Game. (MonoGame -Microsoft.Xna.FrameWork-) </param>
+		/// <returns> Segment, distance tuple </returns>
+		public static (float, Segment) Collision(List<Segment> segment, Vector2 direction, Vector2 position)
         {
             float minDistance = float.PositiveInfinity;
             Segment collider = null;
@@ -104,13 +104,13 @@ namespace Arkanoid_02
             };
         }
 
-        /// <summary> Calculate the distance projection through the direction vector to the "line". </summary>
-        /// <param name="point">The position of the object</param>
-        /// <param name="direction">The direction through the object move</param>
-        /// <param name="vectorPoint1">The initial point the segment</param>
-        /// <param name="vectorPoint2">The end point of the segment</param>
-        /// <returns>The distance between point and the segment</returns>
-        public static float DistancePointLineAlongDir(Vector2 point, Vector2 direction, Vector2 vectorPoint1, Vector2 vectorPoint2)
+		/// <summary> Calculate the distance of the projection along the direction vector to the line. </summary>
+		/// <param name="point">The position of the object.</param>
+		/// <param name="direction">The direction in which the object moves.</param>
+		/// <param name="vectorPoint1">The segment's initial point.</param>
+		/// <param name="vectorPoint2">The end point of the segment.</param>
+		/// <returns>The distance between the point and the segment.</returns>
+		public static float DistancePointLineAlongDir(Vector2 point, Vector2 direction, Vector2 vectorPoint1, Vector2 vectorPoint2)
         {
             var dir = Vector2.Normalize(vectorPoint2 - vectorPoint1);         //line vector
             var pointOnLine = NearestPointOnLine(vectorPoint1, dir, point);   //vector from point to line
@@ -123,24 +123,24 @@ namespace Arkanoid_02
                 return float.PositiveInfinity;  //Nope, we are pointing the wrong way around
         }
 
-        /// <summary> Calculate the proyection the point on the line. </summary>
-        /// <param name="linePnt"> The starting point of the line </param>
-        /// <param name="lineDir"> The direction that follow the point </param>
-        /// <param name="point"> Proyected point on the line </param>
-        /// <returns></returns>
-        public static Vector2 NearestPointOnLine(Vector2 linePnt, Vector2 lineDir, Vector2 point)
+		/// <summary> Calculate the point's projection on the line. </summary>
+		/// <param name="linePnt"> The starting point of the line. </param>
+		/// <param name="lineDir"> The direction that the point follows. </param>
+		/// <param name="point"> The projected point on the line. </param>
+		/// <returns></returns>
+		public static Vector2 NearestPointOnLine(Vector2 linePnt, Vector2 lineDir, Vector2 point)
         {
             var v = point - linePnt;
-            var d = Vector2.Dot(v, lineDir); // This vector "d" have been send Normalized.
-            return linePnt + lineDir * d;
+            var d = Vector2.Dot(v, lineDir); // This vector 'd' has been normalized.
+			return linePnt + lineDir * d;
         }
 
-        /// <summary> This method claculate if the point is on the ini-end segment. </summary>
-        /// <param name="point">The position of the object</param>
-        /// <param name="initpoint">The initial point the segment</param>
-        /// <param name="endpoint">The end point of the segment</param>
-        /// <returns>true if witin</returns>
-        public static bool Ifbetween(Vector2 initpoint, Vector2 endpoint, Vector2 point)
+		/// <summary> This method calculates if the point is on the initial-end segment. </summary>
+		/// <param name="point">The position of the object</param>
+		/// <param name="initpoint">The starting point of the segment</param>
+		/// <param name="endpoint">The end point of the segment</param>
+		/// <returns>True if within</returns>
+		public static bool Ifbetween(Vector2 initpoint, Vector2 endpoint, Vector2 point)
         {
             //(X - a) / (d - b) or (y - b) / (c - a); The max direrence must be between 0 - 1.
             float leftEpsilon, rightEpsilon;
