@@ -1,14 +1,6 @@
-<div class="img01">
-  <img src="Readmedia/ArkaLogo.png" >
-</div>
-
-<style>
-  .img01 {
-    display: flex;        
-    height: auto;
-    justify-content: center;
-  }
-</style>
+<p align="center">
+  <img src="Readmedia/ArkaLogo.png">
+</p>
 
 Arkanoid plus linear algebra!
 ============
@@ -30,16 +22,9 @@ Originally it was a fairly pure point/line collision system, but once I added th
 * Text-based level design, it is easy to iterate and try ideas
 * Purely math-based collision and responses. Proper linear algegra through and through (with normals, reflection calculations and so on)
 
-<div class="img02">
-  <img src="Readmedia/Arkanoid_01.jpg" width=300>
-</div>
-<style>
-  .img02 {
-    display: flex;        
-    height: auto;
-    justify-content: center;
-  }
-</style>
+<p align="center">
+  <img width="400" src="Readmedia/Arkanoid_01.jpg">
+</p>
 
 ---
 ## FSM Gameplay
@@ -50,47 +35,22 @@ And then, of course, Finite State Machines to the rescue!
 
 I chose C#'s Stateless because it is well documented, very standard and has neat features, like being able to create a dotviz file of the logic that can be made into a graph!
 
-<div class="img03">
+<p align="center">
   <img src="Readmedia/Stateless_graph.jpg">
-</div>
-<style>
-  .img03 {
-    display: flex;        
-    height: auto;
-    justify-content: center;
-  }
-</style>
+</p>
 
 ## Linear algebra approach
 
 The first implementation was point-based. A moving point, for continuous collisions becomes a line, which is then collided with the segments that make the rest of the scenery, including bricks, enemies and the world walls themselves.
 Eventually the ball had to acquire volume and thus the point-to-line approach didn work any more. Moving to a sphere would result in capsule/line collisions which are not that simple (though mathematically interesting) and besides the point for this test. I decided to go for small-step sphere/line discrete collision, which with small enough steps result in indistinguishable results from the gameplay viewpoint.
 
-<div class="img04">
-<img src="Readmedia/Circle_Graf.jpg" height=100>
-</div>
-<style>
-  .img04 {
-    display: flex;
-    justify-content: center;
-  }
-</style>
+<p align="center">
+   <img src="Readmedia/Circle_Graf.jpg" height=200>     
+   <img width="400" src="Readmedia/Arkanoid_03.jpg">
+</p>
 
-You can see the segment collections being visible in this shot, or in this video:
-<iframe width="640" height="480" src="https://youtu.be/zr9vkhosWPQ" frameborder="0" allowfullscreen></iframe>
-[video.](https://www.youtube.com/watch?v=zr9vkhosWPQ)
 
-<div class="img05">
-  <img src="Readmedia/Arkanoid_03.jpg" width=300>
-</div>
-
-<style>
-  .img05 {
-    display: flex;        
-    height: auto;
-    justify-content: center;
-  }
-</style>
+You can see the segment collections being visible in this shot, or in this [video](https://www.youtube.com/watch?v=zr9vkhosWPQ). Or gameplay in these others videos: [video 1](https://youtu.be/OPIY_8-ykes), [video 2](https://youtu.be/ajtXl6vqBP8), [video 3](https://youtu.be/IcN0PoVV7M0).
 
 ---
 
@@ -98,8 +58,8 @@ You can see the segment collections being visible in this shot, or in this video
 
 Of course you'll need to clone the repo, but doing so I'd recommend you to 
 
-1. Install the relevant monogame [version]()
-2. Install [stateless]()
+1. Install the relevant monogame [version](https://docs.monogame.net/articles/getting_started/index.html)
+2. Install [stateless](https://www.nuget.org/packages/stateless)
 
 And then use these steps to clone from SourceTree. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
 
@@ -107,6 +67,7 @@ And then use these steps to clone from SourceTree. Cloning allows you to work on
 2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
 3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
 4. Open the directory you just created to see your repository’s files.
+5. Once the code has been cloned on your computer you need to install the two fonts contained in the local folder \Arkanoid\Content\Original_content\Fonts_to_install .
 
 
 ---
