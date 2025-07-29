@@ -83,7 +83,8 @@
 						<xsl:text>data:image/png;base64,</xsl:text>
 						<xsl:value-of select="Return"/>
 					  </xsl:attribute>
-						<xsl:attribute name="style">width:75%; height:auto;</xsl:attribute>
+						<xsl:attribute name="style">width:50%; height:auto;</xsl:attribute>
+						<xsl:attribute name="onload">adjustScroll()</xsl:attribute>
 					</img>
 				  </div>
 				</xsl:when>
