@@ -25,13 +25,13 @@
 						</strong>
 					</div>
 				</xsl:when>
-				<xsl:when test="Type = 'Success'">
+				<!--<xsl:when test="Type = 'Success'">
 					<div style="color: green;">
 						<strong>
 							<xsl:value-of select="Type"/>
 						</strong>
 					</div>
-				</xsl:when>
+				</xsl:when>-->
 				<xsl:when test="Type = 'Void'">
 					<div style="color: goldenrod;">
 						<strong>
@@ -43,67 +43,67 @@
 
 			<!-- Return for list -->
 			<xsl:if test="Return/Entries/FunctionEntry">
-			<div>
-				<strong>Available Functions:</strong>
-				<table class="functions-table">
-					<thead>
-						<tr>
-							<th>Function</th>
-							<th>Description</th>
-						</tr>
-					</thead>
-					<tbody>
-						<xsl:for-each select="Return/Entries/FunctionEntry">
+				<div>
+					<strong>Available Functions:</strong>
+					<table class="functions-table">
+						<thead>
 							<tr>
-								<td>
-									<strong>
-										<xsl:value-of select="Function"/>
-									</strong>
-								</td>
-								<td>
-									<xsl:value-of select="Description"/>
-								</td>
+								<th>Function</th>
+								<th>Description</th>
 							</tr>
-						</xsl:for-each>
-					</tbody>
-				</table>
-				<div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-					Total functions: <xsl:value-of select="count(Return/Entries/FunctionEntry)"/>
+						</thead>
+						<tbody>
+							<xsl:for-each select="Return/Entries/FunctionEntry">
+								<tr>
+									<td>
+										<strong>
+											<xsl:value-of select="Function"/>
+										</strong>
+									</td>
+									<td>
+										<xsl:value-of select="Description"/>
+									</td>
+								</tr>
+							</xsl:for-each>
+						</tbody>
+					</table>
+					<div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+						Total functions: <xsl:value-of select="count(Return/Entries/FunctionEntry)"/>
+					</div>
 				</div>
-			</div>
 			</xsl:if>
 			<xsl:if test="Return and not(Return/Entries/FunctionEntry)">
 				<xsl:choose>
-					
-				<!-- Return contains image -->
-				<xsl:when test="contains(Return, 'iVBOR')">
-				  <div>
-					<img class="capture">
-					  <xsl:attribute name="src">
-						<xsl:text>data:image/png;base64,</xsl:text>
-						<xsl:value-of select="Return"/>
-					  </xsl:attribute>
-						<xsl:attribute name="style">width:50%; height:auto;</xsl:attribute>
-						<xsl:attribute name="onload">adjustScroll()</xsl:attribute>
-					</img>
-				  </div>
-				</xsl:when>
 
-				<!-- Return not contains image -->
-				<xsl:otherwise>
-					<div style="color: grey;">
-						<strong>Return:</strong>
-						<xsl:value-of select="Return"/>
-					</div>
-				</xsl:otherwise>
-			 </xsl:choose>
+					<!-- Return contains image -->
+					<xsl:when test="contains(Return, 'iVBOR')">
+						<div>
+							<img class="capture">
+								<xsl:attribute name="src">
+									<xsl:text>data:image/png;base64,</xsl:text>
+									<xsl:value-of select="Return"/>
+								</xsl:attribute>
+								<xsl:attribute name="style">width:50%; height:auto;</xsl:attribute>
+								<xsl:attribute name="onload">adjustScroll()</xsl:attribute>
+							</img>
+						</div>
+					</xsl:when>
+
+					<!-- Return not contains image -->
+					<xsl:otherwise>
+						<div style="color: grey;">
+							<strong>Return:</strong>
+							<xsl:value-of select="Return"/>
+						</div>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:if>
-			
+
 			<!-- Timestamp -->
 			<xsl:if test="Timestamp">
 				<div>
 					<strong>Timestamp:</strong>
-				<xsl:value-of select="concat(substring(Timestamp, 6, 2), '/', substring(Timestamp, 9, 2), '/', substring(Timestamp, 1, 4), ' ',
+					<xsl:value-of select="concat(substring(Timestamp, 6, 2), '/', substring(Timestamp, 9, 2), '/', substring(Timestamp, 1, 4), ' ',
 					substring(Timestamp, 12, 2), 'h:', substring(Timestamp, 15, 2), 'm:',substring(Timestamp, 18, 2),'s')"/>
 				</div>
 			</xsl:if>
@@ -132,17 +132,17 @@
 				</div>
 			</xsl:if>
 		</div>
-	
+
 	</xsl:template>
 	<xsl:template match="result">
-	  <xsl:choose>
-		<xsl:when test="return/entries/functionentry">
-		  <xsl:apply-templates select="return/entries/functionentry"/>
-		</xsl:when>
-		<xsl:otherwise>
-		  <!-- Other processing -->
-		</xsl:otherwise>
-	  </xsl:choose>
+		<xsl:choose>
+			<xsl:when test="return/entries/functionentry">
+				<xsl:apply-templates select="return/entries/functionentry"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<!-- Other processing -->
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 </xsl:stylesheet>

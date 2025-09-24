@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Arkanoid_02": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 1230988"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
@@ -44,7 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Command_Interpreter">
-      <HintPath>..\..\Command_Interpreter\Library\bin\Debug\net6.0\Command_Interpreter.dll</HintPath>
+      <HintPath>..\..\Command_Interpreter\Library\bin\Debug\net8.0\Command_Interpreter.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

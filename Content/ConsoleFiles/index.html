@@ -1,64 +1,64 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv='x-UA-Compatible' content='IE=edge'>
     <title>Web-Console</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <script>
-		const socket = new WebSocket("ws://localhost:7000/"); // We create the WebSocket object to manage the connection
+        const socket = new WebSocket("ws://localhost:7000/"); // We create the WebSocket object to manage the connection
 
-		socket.onopen = () => {
-			console.log("Connected to the WebSocket server");
-		}
-
-		socket.onmessage = (event) => {
-			document.getElementById("response").innerHTML += `<p>${event.data}</p>`;
-			const contenedor = document.getElementById("response-container");
-			contenedor.scrollTop = contenedor.scrollHeight; console.log("Message received")
-		}
-
-		function send(message) {
-			socket.send(message);
-			console.log("Message sent");
+        socket.onopen = () => {
+            console.log("Connected to the WebSocket server");
         }
 
-		document.addEventListener('DOMContentLoaded', function () {
-			document.addEventListener('click', function (event) {
-			
-				if (event.target.classList.contains('capture')) {
-					const popupImg = document.getElementById('popupImage');
-					popupImg.src = event.target.src;
-					document.getElementById('popupOverlay').style.display = 'block';
-					popupImg.style.display = 'block';
-				}
-			});
-
-			document.addEventListener('mouseover', function (event) {
-				if (event.target.classList.contains('capture')) {
-					event.target.style.cursor = 'pointer';
-				}
-			});
-		});
-
-		function closePopup() {
-			document.getElementById('popupOverlay').style.display = 'none';
-			document.getElementById('popupImage').style.display = 'none';
+        socket.onmessage = (event) => {
+            document.getElementById("response").innerHTML += `<p>${event.data}</p>`;
+            const contenedor = document.getElementById("response-container");
+            contenedor.scrollTop = contenedor.scrollHeight; console.log("Message received")
         }
 
-		function adjustScroll() {
-			const consoleOutput = document.getElementById('response-container');
-			if (consoleOutput) {
-				consoleOutput.scrollTop = consoleOutput.scrollHeight;
-			}
-		}
+        function send(message) {
+            socket.send(message);
+            console.log("Message sent");
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (event) {
+
+                if (event.target.classList.contains('capture')) {
+                    const popupImg = document.getElementById('popupImage');
+                    popupImg.src = event.target.src;
+                    document.getElementById('popupOverlay').style.display = 'block';
+                    popupImg.style.display = 'block';
+                }
+            });
+
+            document.addEventListener('mouseover', function (event) {
+                if (event.target.classList.contains('capture')) {
+                    event.target.style.cursor = 'pointer';
+                }
+            });
+        });
+
+        function closePopup() {
+            document.getElementById('popupOverlay').style.display = 'none';
+            document.getElementById('popupImage').style.display = 'none';
+        }
+
+        function adjustScroll() {
+            const consoleOutput = document.getElementById('response-container');
+            if (consoleOutput) {
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }
+        }
 
     </script>
     <style>
 
-		body {
-		    background-color: rgb(23, 23, 103);
-		}
+        body {
+            background-color: rgb(23, 23, 103);
+        }
 
         .popup-overlay {
             position: fixed;
@@ -84,7 +84,7 @@
             display: none;
         }
 
-        #message{
+        #message {
             color: white;
             font-size: 20px;
             padding-left: 5%;
@@ -96,69 +96,69 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        #message:focus {
-            outline: none;
-            box-shadow: none;
+            #message:focus {
+                outline: none;
+                box-shadow: none;
+                border: none;
+            }
+
+            #message::placeholder {
+                color: rgba(105, 105, 105, 0.281);
+                font-size: 20px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+        #message-box {
+            position: fixed;
+            height: 80px;
+            width: 600px;
+            line-height: 80px;
             border: none;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, rgb(23, 23, 103), rgb(38, 38, 106));
+            box-shadow: 5px 10px 10px rgba(0, 0, 0, 0.3);
         }
 
-        #message::placeholder {
-            color: rgba(105, 105, 105, 0.281);
-            font-size: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        #response-container {
+            height: 500px;
+            width: 600px;
+            max-height: calc(100vh - 50px);
+            flex: 1;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: rgb(23, 23, 103);
+            margin-top: 20px;
         }
 
-		#message-box {
-			position: fixed;
-			height: 80px;
-			width: 600px;
-			line-height: 80px;
-			border: none;
-			border-radius: 10px;
-			background: linear-gradient(to bottom, rgb(23, 23, 103), rgb(38, 38, 106));
-			box-shadow: 5px 10px 10px rgba(0, 0, 0, 0.3);
-		}
-	
-		#response-container {
-			height: 500px;
-			width: 600px;
-			max-height: calc(100vh - 50px);
-			flex: 1;
-			overflow-y:scroll;
-			padding: 10px;
-			background-color: rgb(23, 23, 103);
-			margin-top: 20px;
-		}
-
-		#wrapper {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			flex-direction: column;
-			justify-content: flex-start;
-			align-items: center;
-		}
+        #wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
-      <div id="popupOverlay" class="popup-overlay" onclick="closePopup()"></div>
-      <img id="popupImage" class="popup-img" />
+<body>
+    <div id="popupOverlay" class="popup-overlay" onclick="closePopup()"></div>
+    <img id="popupImage" class="popup-img" />
 
-      <div id="wrapper">
-          <h2 style="color:rgb(199, 33, 157); font-size: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-              Control log
-          </h2>
-          <div>
-              <div id="response-container">
-                  <div id="response"></div>
-              </div>
-              <div id="message-box">
-                  <input id="message" placeholder="Send message" placeholder-color="" onkeydown="if (event.key =='Enter' && this.value != '') {send(this.value); this.value= '';}" />
-              </div>
-           </div>
+    <div id="wrapper">
+        <h2 style="color:rgb(199, 33, 157); font-size: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            Control log
+        </h2>
+        <div>
+            <div id="response-container">
+                <div id="response"></div>
+            </div>
+            <div id="message-box">
+                <input autofocus id="message" placeholder="Send message" placeholder-color="" onkeydown="if (event.key =='Enter' && this.value != '') {send(this.value); this.value= '';}" />
+            </div>
+        </div>
 
-      </div>
-  </body>
+    </div>
+</body>
 
 </html>
